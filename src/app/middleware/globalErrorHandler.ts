@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import httpStatus from "http-status";
 import { Prisma } from '../../generated/prisma/client';
-import config from '../config';
+import config from '../envConfig';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const globalErrorHandler = async (
@@ -14,7 +14,7 @@ export const globalErrorHandler = async (
         console.log('Error from Global Error Handler', err)
     }
 
-    let statusCode : number = httpStatus.INTERNAL_SERVER_ERROR;
+    let statusCode: number = httpStatus.INTERNAL_SERVER_ERROR;
     let errorMessage = err.message || "Internal Server Error";
     let errorName = err.name || "Internal Server Error";
     // let errorDetails = err.stack
@@ -58,6 +58,6 @@ export const globalErrorHandler = async (
         name: config.node_env === 'development' ? errorName : "Internal Server Error",
         message: config.node_env === 'development' ? errorMessage : "Internal Server Error",
         error: config.node_env === 'development' ? err : undefined,
-        stack: config.node_env  === 'development' ? err.stack : undefined,
+        stack: config.node_env === 'development' ? err.stack : undefined,
     })
 }
