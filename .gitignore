@@ -1,3 +1,14 @@
 .env
+.draft
 node_modules
 draft.txt
+
+dist
+
+/src/generated
+
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+pnpm-workspace.yaml
+.vscode
