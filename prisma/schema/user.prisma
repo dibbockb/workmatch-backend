@@ -1,15 +1,24 @@
 model User {
-  id                 String    @id @default(uuid())
+  id                 String     @id @default(uuid(7))
   name               String
   email              String
   password           String
-  emailVerified      Boolean   @default(false)
-  needPasswordChange Boolean   @default(false)
-  isDeleted          Boolean   @default(false)
+  profileImageUrl    String?
+  role               UserRoles  @default(FREELANCER)
+  status             UserStatus @default(ACTIVE)
+  emailVerified      Boolean    @default(false)
+  needPasswordChange Boolean    @default(false)
+  isDeleted          Boolean    @default(false)
+  isBlocked          Boolean    @default(false)
   deletedAt          DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  freelancer Freelancer?
+  client     Client?
 
   @@unique([email])
+  @@index([email])
+  @@index([createdAt])
   @@map("users")
 }

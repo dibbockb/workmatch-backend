@@ -1,0 +1,16 @@
+model Freelancer {
+  id            String    @id @default(uuid(7))
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+  bio           String?
+  skills        String[]
+  hourlyRate    Decimal   @db.Decimal(10, 2)
+  totalEarnings Decimal   @default(0) @db.Decimal(10, 2)
+  averageRating Decimal   @default(0) @db.Decimal(3, 2)
+  completedWork Int       @default(0)
+  portfolioUrl  String?
+  verified      Boolean   @default(false)
+  verifiedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}

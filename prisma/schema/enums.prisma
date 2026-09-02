@@ -1,3 +1,11 @@
-enum Role {
+enum UserRoles {
   ADMIN
+  CLIENT
+  FREELANCER
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  DELETED
 }
