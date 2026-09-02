@@ -4,23 +4,25 @@ import { catchAsync } from '../../utils/catchAsync'
 import { sendResponse } from '../../utils/sendResponse'
 import { IRequestUser } from './auth.interface'
 import { AuthService } from './auth.service'
+import { LoginValidationSchema, RegisterValidationSchema } from './auth.validation'
+import envConfig from '../../envConfig'
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
-    const payload = req.body
-    const result = await AuthService.registerUser(payload)
+    const validatedPayload = RegisterValidationSchema.parse(req.body)
+    const result = await AuthService.registerUser(validatedPayload)
 
     const { accessToken, refreshToken, user } = result
 
     res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "none",
-        maxAge: 1000 * 60 * 60 * 24 // 24 hour or 1 day
+        secure: envConfig.node_env === 'production',
+        sameSite: "lax",
+        maxAge: 1000 * 60 * 60 * 24 // 24 hour
     })
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "none",
+        secure: envConfig.node_env === 'production',
+        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
     })
 
@@ -37,20 +39,20 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
 })
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
-    const payload = req.body
-    const result = await AuthService.loginUser(payload)
+    const validatedPayload = LoginValidationSchema.parse(req.body)
+    const result = await AuthService.loginUser(validatedPayload)
     const { accessToken, refreshToken } = result
 
     res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "none",
-        maxAge: 1000 * 60 * 60 * 24 // 24 hour or 1 day
+        secure: envConfig.node_env === 'production',
+        sameSite: "lax",
+        maxAge: 1000 * 60 * 60 * 24 // 24 hour
     })
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "none",
+        secure: envConfig.node_env === 'production',
+        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
     })
 
@@ -85,19 +87,19 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
     if (!req.cookies.refreshToken) {
         throw new Error('Refresh token is missing')
     }
-    const result = await AuthService.refreshToken(req.cookies.refreshToken)
+    const result = await AuthService.refreshTokenHandler(req.cookies.refreshToken)
     const { accessToken, refreshToken: newRefreshToken } = result
 
     res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "none",
+        secure: envConfig.node_env === 'production',
+        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 24 // 24 hour or 1 day
     })
     res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "none",
+        secure: envConfig.node_env === 'production',
+        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
     })
 
