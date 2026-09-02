@@ -6,7 +6,7 @@ model Client {
     bio           String?
     totalSpent    Decimal  @db.Decimal(10, 2)
     postedJobs    Int
-    averageRating Decimal
+    averageRating Decimal  @db.Decimal(3, 2)
     createdAt     DateTime @default(now())
     updatedAt     DateTime @updatedAt
 }

@@ -16,6 +16,7 @@ model User {
 
   freelancer Freelancer?
   client     Client?
+  postedJobs Job[] @relation("clientJobs")
 
   @@unique([email])
   @@index([email])

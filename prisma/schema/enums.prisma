@@ -9,3 +9,11 @@ enum UserStatus {
   BLOCKED
   DELETED
 }
+
+enum JobStatus {
+  OPEN
+  CLISED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}

@@ -1,0 +1,20 @@
+model Job {
+    id                 String    @id @default(uuid(7))
+    clientId           String
+    client             User      @relation("clientJobs", fields: [clientId], references: [id])
+    title              String
+    description        String
+    requiredSkills     String[]
+    budgetMin          Decimal   @db.Decimal(10, 2)
+    budgetMax          Decimal   @db.Decimal(10, 2)
+    deadline           DateTime
+    status             JobStatus @default(OPEN)
+    proposalCount      Int       @default(0)
+    selectedProposalId String?
+    createdAt          DateTime  @default(now())
+    updatedAt          DateTime  @updatedAt
+    deletedAt          DateTime?
+
+    @@index([clientId, status, deadline, createdAt])
+    @@map("jobs")
+}
