@@ -102,15 +102,15 @@ const loginUser = async (payload: ILoginUserPayload) => {
     })
 
     if (!user) {
-        throw new Error('User not found')
+        throw new Error('Invalid Credentials')
     }
 
     if (user.status === UserStatus.BLOCKED) {
-        throw new Error('User is blocked')
+        throw new Error('Your account is blocked')
     }
 
     if (user.isDeleted || user.status === UserStatus.DELETED) {
-        throw new Error('User is deleted')
+        throw new Error('User Account not found')
     }
 
     const isPasswordMatched = await bcrypt.compare(password, user.password)
@@ -119,21 +119,21 @@ const loginUser = async (payload: ILoginUserPayload) => {
         throw new Error('Invalid credentials')
     }
 
-    const jwtPayload = {
+    const tokenPayload: ITokenPayload = {
         userId: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role as UserRoles,
     }
 
     const accessToken = jwtUtils.createToken(
-        jwtPayload,
+        tokenPayload,
         config.jwt_access_secret,
         config.jwt_access_expires_in as SignOptions
     );
 
     const refreshToken = jwtUtils.createToken(
-        jwtPayload,
+        tokenPayload,
         config.jwt_refresh_secret,
         config.jwt_refresh_expires_in as SignOptions
     );
@@ -149,11 +149,12 @@ const getMe = async (user: IRequestUser) => {
         where: {
             id: user.userId,
         },
-        include: {
-            freelancer: true,
-        },
         omit: {
             password: true,
+        },
+        include: {
+            freelancer: true,
+            client: true,
         },
     })
 
@@ -164,11 +165,11 @@ const getMe = async (user: IRequestUser) => {
     return isUserExists
 }
 
-const refreshToken = async (token: string) => {
+const refreshTokenHandler = async (token: string) => {
     const verifiedRefreshToken = jwtUtils.verifyToken(token, config.jwt_refresh_secret)
 
     if (!verifiedRefreshToken.success || !verifiedRefreshToken.data) {
-        throw new Error(config.node_env === 'development' ? verifiedRefreshToken.error : 'Invalid refresh token')
+        throw new Error('Invalid refresh token')
     }
 
     const data = verifiedRefreshToken.data as JwtPayload
@@ -181,21 +182,21 @@ const refreshToken = async (token: string) => {
         throw new Error('User is inactive or not found')
     }
 
-    const jwtPayload = {
+    const tokenPayload = {
         userId: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role as UserRoles
     }
 
     const accessToken = jwtUtils.createToken(
-        jwtPayload,
+        tokenPayload,
         config.jwt_access_secret,
         config.jwt_access_expires_in as SignOptions
     );
 
     const refreshToken = jwtUtils.createToken(
-        jwtPayload,
+        tokenPayload,
         config.jwt_refresh_secret,
         config.jwt_refresh_expires_in as SignOptions
     );
@@ -212,5 +213,5 @@ export const AuthService = {
     registerUser,
     loginUser,
     getMe,
-    refreshToken
+    refreshTokenHandler
 }
