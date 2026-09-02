@@ -46,10 +46,7 @@ export const auth = (...requiredRoles: UserRoles[]) => {
 
         const user = await prisma.user.findUnique({
             where: {
-                id: userId,
-                email,
-                name,
-                role
+                id: userId
             }
         });
 
@@ -57,7 +54,7 @@ export const auth = (...requiredRoles: UserRoles[]) => {
             throw new Error("User not found. Please log in again.");
         }
 
-        if (user.status === "BLOCKED") {
+        if (user.status === "BLOCKED" || user.isBlocked) {
             throw new Error("Your account has been blocked. Please contact support.");
         }
 
