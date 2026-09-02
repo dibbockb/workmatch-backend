@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { JwtPayload, SignOptions } from 'jsonwebtoken'
-import { UserRoles } from '../../../generated/prisma/enums'
+import { UserRoles, UserStatus } from '../../../generated/prisma/enums'
 import config from '../../envConfig'
 import { prisma } from '../../lib/prisma'
 import { jwtUtils } from '../../utils/jwt'
@@ -33,15 +33,12 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
             role: UserRoles.FREELANCER,
             // status: UserStatus.ACTIVE,
             emailVerified: false,
-            freelancer: {
-                create: { name, email },
-            },
         },
         omit: { password: true },
-        include: { patient: true },
+        include: { freelancer: true },
     })
 
-    const { patient, ...user } = createdUser
+    const { freelancer, ...user } = createdUser
     const jwtPayload = {
         userId: user.id,
         name: user.name,
@@ -63,7 +60,7 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
 
     return {
         user,
-        patient,
+        freelancer,
         accessToken,
         refreshToken
     }
@@ -126,7 +123,7 @@ const getMe = async (user: IRequestUser) => {
             id: user.userId,
         },
         include: {
-            patient: true,
+            freelancer: true,
         },
         omit: {
             password: true,

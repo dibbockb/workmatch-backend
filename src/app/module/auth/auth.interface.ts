@@ -1,4 +1,4 @@
-import { Role } from "../../../generated/prisma/browser"
+import { UserRoles } from "../../../generated/prisma/browser"
 
 export interface ILoginUserPayload {
     email: string
@@ -15,5 +15,5 @@ export interface IRequestUser {
     userId: string
     email: string
     name: string
-    role: Role
+    role: UserRoles
 }
