@@ -6,61 +6,88 @@ import { prisma } from '../../lib/prisma'
 import { jwtUtils } from '../../utils/jwt'
 import {
     ILoginUserPayload,
-    IRegisterPatientPayload,
-    IRequestUser
+    IRegisterUserPayload,
+    IRequestUser,
+    ITokenPayload
 } from './auth.interface'
+import envConfig from '../../envConfig'
 
 
-const registerPatient = async (payload: IRegisterPatientPayload) => {
-    const { name, password } = payload
-    const email = payload.email.trim().toLowerCase()
+const registerUser = async (payload: IRegisterUserPayload) => {
+    const { name, email, password, role, companyName } = payload
+    const normalizedEmail = email.trim().toLocaleLowerCase()
 
     const isUserExists = await prisma.user.findUnique({
-        where: { email },
+        where: { email: normalizedEmail },
     })
 
     if (isUserExists) {
         throw new Error('User with this email already exists')
     }
 
-    const hashedPassword = await bcrypt.hash(password, 8)
+    const hashedPassword = await bcrypt.hash(password, Number(envConfig.bcrypt_salt_rounds))
 
-    const createdUser = await prisma.user.create({
-        data: {
-            name,
-            email,
-            password: hashedPassword,
-            role: UserRoles.FREELANCER,
-            // status: UserStatus.ACTIVE,
-            emailVerified: false,
-        },
-        omit: { password: true },
-        include: { freelancer: true },
+    const createdUser = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+            data: {
+                name,
+                email: normalizedEmail,
+                password: hashedPassword,
+                role: role as UserRoles,
+                status: UserStatus.ACTIVE,
+                emailVerified: false,
+            },
+            omit: { password: true },
+        })
+
+        if (role === UserRoles.FREELANCER) {
+            await tx.freelancer.create({
+                data: {
+                    userId: user.id,
+                    bio: '',
+                    skills: [],
+                    hourlyRate: 0,
+                    portfolioUrl: null,
+                }
+            })
+        }
+
+        else if (role === UserRoles.CLIENT) {
+            await tx.client.create({
+                data: {
+                    userId: user.id,
+                    companyName: companyName || name,
+                    bio: '',
+                    totalSpent: 0,
+                    postedJobs: 0,
+                    averageRating: 0,
+                }
+            })
+        }
+        return user;
     })
 
-    const { freelancer, ...user } = createdUser
-    const jwtPayload = {
-        userId: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
+    const tokenPayload: ITokenPayload = {
+        userId: createdUser.id,
+        name: createdUser.name,
+        email: createdUser.email,
+        role: createdUser.role as UserRoles
     }
 
     const accessToken = jwtUtils.createToken(
-        jwtPayload,
+        tokenPayload,
         config.jwt_access_secret,
         config.jwt_access_expires_in as SignOptions
     );
 
     const refreshToken = jwtUtils.createToken(
-        jwtPayload,
+        tokenPayload,
         config.jwt_refresh_secret,
         config.jwt_refresh_expires_in as SignOptions
     );
 
     return {
-        user,
-        freelancer,
+        user: createdUser,
         accessToken,
         refreshToken
     }
@@ -182,7 +209,7 @@ const refreshToken = async (token: string) => {
 
 
 export const AuthService = {
-    registerPatient,
+    registerUser,
     loginUser,
     getMe,
     refreshToken

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { JwtPayload } from "jsonwebtoken";
-import { Role } from "../../generated/prisma/enums";
+import { UserRoles } from "../../generated/prisma/enums";
 import config from "../envConfig";
 import { prisma } from "../lib/prisma";
 import { catchAsync } from "../utils/catchAsync";
@@ -13,13 +13,13 @@ declare global {
                 email: string;
                 name: string;
                 userId: string;
-                role: Role;
+                role: UserRoles;
             }
         }
     }
 }
 
-export const auth = (...requiredRoles: Role[]) => {
+export const auth = (...requiredRoles: UserRoles[]) => {
     return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
         const token = req.cookies.accessToken ?
             req.cookies.accessToken
