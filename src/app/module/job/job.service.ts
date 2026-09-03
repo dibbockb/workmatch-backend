@@ -123,7 +123,6 @@ const getJobsList = async (filters: IJobFilters) => {
         orderBy,
         include: {
             client: {
-                omit: { password: true },
                 select: {
                     id: true,
                     name: true,

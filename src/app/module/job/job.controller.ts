@@ -5,6 +5,7 @@ import { CreateJobValidationSchema, UpdateJobValidationSchema } from "./job.vali
 import { JobService } from "./job.service";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from 'http-status'
+import { IJobFilters } from "./job.interface";
 
 const createJob = catchAsync(async (req: Request, res: Response) => {
     const user = req.user as IRequestUser
@@ -39,7 +40,7 @@ const getJobsList = catchAsync(async (req: Request, res: Response) => {
 
     const filters = {
         status: status as any,
-        // skills: skills ? (Array.isArray(skills) ? skills : [skills]) : undefined,
+        skills: skills ? (Array.isArray(skills) ? skills : [skills]) : undefined,
         budgetMin: budgetMin ? Number(budgetMin) : undefined,
         budgetMax: budgetMax ? Number(budgetMax) : undefined,
         sortBy: (sortBy as any) || 'createdAt',
@@ -47,7 +48,14 @@ const getJobsList = catchAsync(async (req: Request, res: Response) => {
         limit: limit ? Number(limit) : 20,
     }
 
-    const result = await JobService.getJobsList(filters)
+    const result = await JobService.getJobsList(filters as IJobFilters)
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Jobs fetched successfully",
+        data: result
+    })
 
 })
 
