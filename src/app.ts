@@ -7,6 +7,7 @@ import { globalErrorHandler } from './app/middleware/globalErrorHandler'
 import { notFound } from './app/middleware/notFound'
 import { AuthRoutes } from './app/module/auth/auth.route'
 import { JobRoutes } from './app/module/job/job.route'
+import { ProposalRoutes } from './app/module/proposal/proposal.route'
 
 const app: Application = express()
 
@@ -24,6 +25,7 @@ app.use(cookieParser())
 
 app.use('/api/v1/auth', AuthRoutes)
 app.use('/api/v1/jobs', JobRoutes)
+app.use('/api/v1/proposals', ProposalRoutes)
 
 app.get('/', async (req: Request, res: Response) => {
     res.status(httpStatus.OK).json({

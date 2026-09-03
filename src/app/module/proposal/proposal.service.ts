@@ -308,7 +308,6 @@ const rejectCounterOffer = async (counterOfferId: string, userId: string) => {
     return updated;
 }
 
-
 export const ProposalService = {
     submitProposal,
     getProposals,
