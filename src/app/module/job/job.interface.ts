@@ -5,7 +5,7 @@ export interface IJobFilters {
     skills?: string[]
     budgetMin?: number
     budgetMax?: number
-    sortBy?: 'deadline' | 'budgetMax' | 'createdAt'
+    sortBy?: 'deadline' | 'budgetMax' | 'createdAt' | 'proposedPrice'
     page?: number
     limit?: number
 }
