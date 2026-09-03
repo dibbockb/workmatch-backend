@@ -12,7 +12,7 @@ enum UserStatus {
 
 enum JobStatus {
   OPEN
-  CLISED
+  CLOSED
   IN_PROGRESS
   COMPLETED
   CANCELLED
