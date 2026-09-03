@@ -17,3 +17,21 @@ enum JobStatus {
   COMPLETED
   CANCELLED
 }
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum CounterOfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum CounterOfferOrigin {
+  CLIENT
+  FREELANCER
+}

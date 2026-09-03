@@ -1,12 +1,12 @@
 model Client {
-    id            String   @id @default(uuid(7))
-    userId        String   @unique
-    user          User     @relation(fields: [userId], references: [id])
-    companyName   String
-    bio           String?
-    totalSpent    Decimal  @db.Decimal(10, 2)
-    postedJobs    Int
-    averageRating Decimal  @db.Decimal(3, 2)
-    createdAt     DateTime @default(now())
-    updatedAt     DateTime @updatedAt
+  id            String   @id @default(uuid(7))
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  companyName   String
+  bio           String?
+  totalSpent    Decimal  @db.Decimal(10, 2)
+  postedJobs    Int
+  averageRating Decimal  @db.Decimal(3, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

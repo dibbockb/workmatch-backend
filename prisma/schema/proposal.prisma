@@ -1,0 +1,23 @@
+model Proposal {
+  id                  String         @id @default(uuid(7))
+  jobId               String
+  job                 Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancerId        String
+  freelancer          User           @relation("userProposals", fields: [freelancerId], references: [id])
+  proposedPrice       Decimal        @db.Decimal(10, 2)
+  proposedTimeline    Int
+  approachDescription String
+  status              ProposalStatus @default(PENDING)
+  submittedAt         DateTime       @default(now())
+  respondedAt         DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  counterOffers CounterOffer[]
+
+  @@unique([jobId, freelancerId])
+  @@index([jobId])
+  @@index([freelancerId])
+  @@index([status])
+  @@map("proposals")
+}
