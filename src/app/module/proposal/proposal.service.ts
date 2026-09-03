@@ -2,6 +2,7 @@ import { Prisma } from "../../../generated/prisma/client";
 import { JobStatus, ProposalStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 import { IJobFilters } from "../job/job.interface";
+import { IProposalFilters } from "./proposal.interface";
 import { ICreateProposalPayload } from "./proposal.validation";
 
 const submitProposal = async (payload: ICreateProposalPayload, freelancerId: string) => {
@@ -126,8 +127,103 @@ const getProposals = async (jobId: string, filters: IJobFilters) => {
     }
 }
 
+const getProposalById = async (proposalId: string) => {
+    const proposal = await prisma.proposal.findUnique({
+        where: { id: proposalId },
+        include: {
+            freelancer: {
+                select: {
+                    id: true,
+                    name: true,
+                    profileImageUrl: true
+                }
+            }
+        }
+    })
+
+    if (!proposal) {
+        throw new Error(`Proposal not found.`)
+    }
+
+    return proposal;
+}
+
+const getFreelancerProposals = async (freelancerId: string, filters: IProposalFilters) => {
+    const { status, page = 1, limit = 20, sortBy = "submittedAt" } = filters;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ProposalWhereInput = {
+        freelancerId,
+    };
+    if (status) {
+        where.status = status
+    }
+
+    let orderBy: Prisma.ProposalOrderByWithRelationInput = {
+        submittedAt: 'desc'
+    }
+    if (sortBy === "proposedPrice") {
+        orderBy = { proposedPrice: "asc" }
+    }
+    const total = await prisma.proposal.count({
+        where
+    })
+
+    const proposals = await prisma.proposal.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: {
+            job: true,
+            counterOffers: {
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            }
+        }
+    })
+
+    return {
+        proposals,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+        }
+    }
+}
+
+const withdrawProposal = async (proposalId: string, freelancerId: string) => {
+    const proposal = await prisma.proposal.findUnique({
+        where: { id: proposalId }
+    })
+
+    if (!proposal) {
+        throw new Error(`Proposal not found.`)
+    }
+    if (proposal.freelancerId !== freelancerId) {
+        throw new Error(`You do not have persmission to withdraw this proposal.`)
+    }
+
+    if (proposal.status !== ProposalStatus.PENDING) {
+        throw new Error(`You can only withdraw pending proposals`)
+    }
+
+    const withdrawn = await prisma.proposal.update({
+        where: { id: proposalId },
+        data: {
+            status: ProposalStatus.WITHDRAWN
+        }
+    })
+    return withdrawn;
+}
 
 export const ProposalService = {
     submitProposal,
-    getProposals
+    getProposals,
+    getProposalById,
+    getFreelancerProposals,
+    withdrawProposal
 }
