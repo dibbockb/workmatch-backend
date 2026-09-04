@@ -80,13 +80,19 @@ const handleWebhook = async (event: Stripe.Event) => {
     }
 }
 
-const getPayment = async (paymentId: string) => {
+const getPayment = async (paymentId: string, userId: string) => {
     const payment = await prisma.payment.findUnique({
         where: { id: paymentId }
     })
 
     if (!payment) {
         throw new Error(`Payment not found.`)
+    }
+    if (
+        payment.clientId !== userId &&
+        payment.freelancerId !== userId
+    ) {
+        throw new Error("You do not have permission to view this payment.");
     }
 
     return payment;

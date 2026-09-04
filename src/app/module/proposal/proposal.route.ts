@@ -16,7 +16,7 @@ router.get("/job/:jobId", auth(UserRoles.CLIENT), ProposalController.getProposal
 router.get("/:proposalId", ProposalController.getProposalById);
 
 router.post(
-    "/:proposalId/withdraw",
+    "/:proposalId/withdraw",    
     auth(UserRoles.FREELANCER),
     ProposalController.withdrawProposal
 );

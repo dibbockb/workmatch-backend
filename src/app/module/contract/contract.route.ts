@@ -10,7 +10,7 @@ router.post(
     auth(UserRoles.CLIENT),
     ContractController.acceptProposal
 );
-router.get("/:contractId", ContractController.getContract);
+router.get("/:contractId", auth(UserRoles.CLIENT, UserRoles.FREELANCER, UserRoles.ADMIN), ContractController.getContract);
 router.get("/", ContractController.getMyContracts);
 router.patch(
     "/:contractId/mark-complete",

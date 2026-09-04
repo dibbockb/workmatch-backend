@@ -12,8 +12,10 @@ import { ContractRoutes } from './app/module/contract/contract.route'
 import { PaymentRoutes } from './app/module/payment/payment.route'
 import helmet from "helmet"
 import rateLimiter from "express-rate-limit"
+import { PaymentController } from './app/module/payment/payment.controller'
 
 const app: Application = express()
+app.post('/api/v1/payment/webhook', express.raw({ type: 'application/json' }), PaymentController.handleWebhook)
 
 app.use(
     cors({

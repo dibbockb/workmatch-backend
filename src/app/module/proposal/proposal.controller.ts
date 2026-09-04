@@ -26,6 +26,7 @@ const submitProposal = catchAsync(async (req: Request, res: Response) => {
 const getProposalsForJob = catchAsync(async (req: Request, res: Response) => {
     const { jobId } = req.params;
     const { page, limit, sortBy } = req.query;
+    const user = req.user as IRequestUser;
 
     const filters = {
         jobId,
@@ -34,7 +35,7 @@ const getProposalsForJob = catchAsync(async (req: Request, res: Response) => {
         sortBy: (sortBy as any) || "submittedAt",
     };
 
-    const result = await ProposalService.getProposals(jobId as string, filters);
+    const result = await ProposalService.getProposals(jobId as string, filters, user.userId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

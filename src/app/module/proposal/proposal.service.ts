@@ -73,7 +73,7 @@ const submitProposal = async (payload: ICreateProposalPayload, freelancerId: str
     })
 }
 
-const getProposals = async (jobId: string, filters: IJobFilters) => {
+const getProposals = async (jobId: string, filters: IJobFilters, clientId: string) => {
     const { page = 1, limit = 50, sortBy = 'submittedAt' } = filters
     const skip = (page - 1) * limit
     const job = await prisma.job.findUnique({
@@ -82,6 +82,9 @@ const getProposals = async (jobId: string, filters: IJobFilters) => {
 
     if (!job) {
         throw new Error(`Job Not Found.`)
+    }
+    if (job.clientId !== clientId) {
+        throw new Error("You do not have permission to view these proposals.");
     }
 
     let orderBy: Prisma.ProposalOrderByWithRelationInput = { submittedAt: "desc" };
@@ -252,15 +255,16 @@ const createCounterOffer = async (proposalId: string, clientId: string, payload:
 
 const acceptCounterOffer = async (counterOfferId: string, freelancerId: string) => {
     const counterOffer = await prisma.counterOffer.findUnique({
-        where: { id: counterOfferId }
+        where: { id: counterOfferId },
+        include: { proposal: true }
     })
 
     if (!counterOffer) {
         throw new Error(`Counter offer not found.`)
     }
-    //     if (counterOffer.offeredBy === CounterOfferOrigin.CLIENT && counterOffer.proposalId) {
-    // 
-    //     }
+    if (counterOffer.proposal.freelancerId !== freelancerId) {
+        throw new Error(`You do not have permission to accept this offer.`)
+    }
     if (counterOffer.status !== CounterOfferStatus.PENDING) {
         throw new Error("Counteroffer has already been responded.");
     }
@@ -285,14 +289,17 @@ const acceptCounterOffer = async (counterOfferId: string, freelancerId: string) 
     return updated;
 }
 
-const rejectCounterOffer = async (counterOfferId: string, userId: string) => {
+const rejectCounterOffer = async (counterOfferId: string, freelancerId: string) => {
     const counterOffer = await prisma.counterOffer.findUnique({
         where: { id: counterOfferId },
-        include: { proposal: true },
-    });
+        include: { proposal: true }
+    })
 
     if (!counterOffer) {
         throw new Error("Counter offer not found");
+    }
+    if (counterOffer.proposal.freelancerId !== freelancerId) {
+        throw new Error(`You do not have permission to reject this offer.`)
     }
     if (counterOffer.status !== CounterOfferStatus.PENDING) {
         throw new Error("Counter offer has already been responded.");

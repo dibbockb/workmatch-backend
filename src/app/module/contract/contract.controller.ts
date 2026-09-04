@@ -21,7 +21,9 @@ const acceptProposal = catchAsync(async (req: Request, res: Response) => {
 
 const getContract = catchAsync(async (req: Request, res: Response) => {
     const { contractId } = req.params;
-    const result = await ContractService.getContract(contractId as string);
+    const user = req.user as IRequestUser;
+
+    const result = await ContractService.getContract(contractId as string, user.userId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

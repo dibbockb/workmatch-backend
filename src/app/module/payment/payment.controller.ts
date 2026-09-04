@@ -42,8 +42,8 @@ const handleWebhook = catchAsync(async (req: Request, res: Response) => {
 
 const getPayment = catchAsync(async (req: Request, res: Response) => {
     const { paymentId } = req.params;
-
-    const result = await PaymentService.getPayment(paymentId as string);
+    const user = req.user as IRequestUser
+    const result = await PaymentService.getPayment(paymentId as string, user.userId);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

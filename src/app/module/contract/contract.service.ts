@@ -65,7 +65,7 @@ const acceptProposal = async (jobId: string, proposalId: string, clientId: strin
     })
 }
 
-const getContract = async (contractId: string) => {
+const getContract = async (contractId: string, userId: string) => {
     const contract = await prisma.contract.findUnique({
         where: { id: contractId },
         include: {
@@ -79,6 +79,12 @@ const getContract = async (contractId: string) => {
 
     if (!contract) {
         throw new Error(`Contract Not Found`)
+    }
+    if (
+        contract.clientId !== userId &&
+        contract.freelancerId !== userId
+    ) {
+        throw new Error("You do not have permission to view this contract.");
     }
 
     return contract;

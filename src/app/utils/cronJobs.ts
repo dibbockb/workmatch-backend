@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma";
 import { JobStatus } from "../../generated/prisma/enums";
 
 export const startCronJobs = () => {
-    cron.schedule("* /5 * * *", async () => {
+    cron.schedule("*/15 * * * *", async () => {
         try {
             const passedJobs = await prisma.job.findMany({
                 where: {
