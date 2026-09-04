@@ -201,6 +201,7 @@ const getMyPostedJobs = async (clientId: string, filters: Partial<IJobFilters>) 
 }
 
 const updateJob = async (jobId: string, payload: IUpdateJobPayload, clientId: string) => {
+
     const job = await prisma.job.findUnique({
         where: { id: jobId }
     })
@@ -213,6 +214,13 @@ const updateJob = async (jobId: string, payload: IUpdateJobPayload, clientId: st
     }
     if (job.status !== JobStatus.OPEN) {
         throw new Error(`Can only update open jobs.`)
+    }
+
+    const newMin = payload.budgetMin ?? job.budgetMin;
+    const newMax = payload.budgetMax ?? job.budgetMax;
+
+    if (newMax < newMin) {
+        throw new Error("Maximum budget cannot be less than minimum budget.");
     }
 
     const updated = await prisma.job.update({
