@@ -10,6 +10,8 @@ import { JobRoutes } from './app/module/job/job.route'
 import { ProposalRoutes } from './app/module/proposal/proposal.route'
 import { ContractRoutes } from './app/module/contract/contract.route'
 import { PaymentRoutes } from './app/module/payment/payment.route'
+import helmet from "helmet"
+import rateLimiter from "express-rate-limit"
 
 const app: Application = express()
 
@@ -20,10 +22,25 @@ app.use(
     }),
 )
 
+app.use(helmet());
 app.use(express.urlencoded({ extended: true }))
-
 app.use(express.json())
 app.use(cookieParser())
+
+const appRateLimit = rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: "Too many requests from this IP address. Please try again after sometime."
+})
+app.use('/api/', appRateLimit)
+
+const authRateLimit = rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: "Too many login attempts. Please try again later."
+})
+app.use("/api/v1/auth/login", authRateLimit);
+app.use("/api/v1/auth/register", authRateLimit);
 
 app.use('/api/v1/auth', AuthRoutes)
 app.use('/api/v1/jobs', JobRoutes)
