@@ -14,10 +14,12 @@ model User {
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
 
-  freelancer Freelancer?
-  client     Client?
-  postedJobs Job[]       @relation("clientJobs")
-  proposals  Proposal[]  @relation("userProposals")
+  freelancer            Freelancer?
+  client                Client?
+  postedJobs            Job[]       @relation("clientJobs")
+  proposals             Proposal[]  @relation("userProposals")
+  contractsAsClient     Contract[]  @relation("clientContracts")
+  contractsAsFreelancer Contract[]  @relation("freelancerContracts")
 
   @@unique([email])
   @@index([email])

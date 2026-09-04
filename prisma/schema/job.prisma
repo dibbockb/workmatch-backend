@@ -16,6 +16,7 @@ model Job {
   deletedAt          DateTime?
 
   proposals Proposal[]
+  contract  Contract?
 
   @@index([clientId, status, deadline, createdAt])
   @@map("jobs")

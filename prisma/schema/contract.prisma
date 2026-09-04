@@ -1,0 +1,27 @@
+model Contract {
+  id             String         @id @default(uuid(7))
+  jobId          String         @unique
+  job            Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  proposalId     String         @unique
+  proposal       Proposal       @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         User           @relation("clientContracts", fields: [clientId], references: [id])
+  freelancerId   String
+  freelancer     User           @relation("freelancerContracts", fields: [freelancerId], references: [id])
+  agreedPrice    Decimal        @db.Decimal(10, 2)
+  agreedTimeline Int
+  status         ContractStatus @default(ACTIVE)
+  startDate      DateTime       @default(now())
+  endDate        DateTime?
+  deliverables   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  // payments Payment[]
+
+  @@index([clientId])
+  @@index([freelancerId])
+  @@index([status])
+  @@map("contracts")
+}

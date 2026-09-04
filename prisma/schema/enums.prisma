@@ -35,3 +35,10 @@ enum CounterOfferOrigin {
   CLIENT
   FREELANCER
 }
+
+enum ContractStatus {
+  ACTIVE
+  COMPLETED
+  DISPUTED
+  CANCELLED
+}

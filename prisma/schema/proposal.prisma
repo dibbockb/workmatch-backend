@@ -14,6 +14,7 @@ model Proposal {
   updatedAt           DateTime       @updatedAt
 
   counterOffers CounterOffer[]
+  contract      Contract?
 
   @@unique([jobId, freelancerId])
   @@index([jobId])
