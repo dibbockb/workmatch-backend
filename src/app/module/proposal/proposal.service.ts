@@ -147,7 +147,7 @@ const getProposalById = async (proposalId: string) => {
     if (!proposal) {
         throw new Error(`Proposal not found.`)
     }
-    
+
 
     return proposal;
 }
@@ -208,7 +208,7 @@ const withdrawProposal = async (proposalId: string, freelancerId: string) => {
         throw new Error(`Proposal not found.`)
     }
     if (proposal.freelancerId !== freelancerId) {
-        throw new Error(`You do not have persmission to withdraw this proposal.`)
+        throw new Error(`You do not have permission to withdraw this proposal.`)
     }
 
     if (proposal.status !== ProposalStatus.PENDING) {
@@ -225,69 +225,95 @@ const withdrawProposal = async (proposalId: string, freelancerId: string) => {
 }
 
 const createCounterOffer = async (proposalId: string, clientId: string, payload: ICreateCounterOfferPayload) => {
-    const proposal = await prisma.proposal.findUnique({
-        where: { id: proposalId },
-        include: { job: true }
-    })
+    const counterOffer = await prisma.$transaction(async (tx) => {
+        const existingPending = await tx.counterOffer.findFirst({
+            where: {
+                proposalId,
+                status: CounterOfferStatus.PENDING
+            }
+        });
+        if (existingPending) {
+            throw new Error("There is already a pending counteroffer for this proposal.");
+        }
 
-    if (!proposal) {
-        throw new Error(`Proposal Not Found.`)
-    }
-    if (proposal.job.clientId !== clientId) {
-        throw new Error(`You do not have persmission to counter offer on this proposal.`)
-    }
-    if (proposal.status !== ProposalStatus.PENDING) {
-        throw new Error(`Cannot create counter offer for non-pending proposals.`)
-    }
+        const proposal = await prisma.proposal.findUnique({
+            where: { id: proposalId },
+            include: { job: true }
+        })
 
-    const counterOffer = await prisma.counterOffer.create({
-        data: {
-            proposalId,
-            offeredBy: CounterOfferOrigin.CLIENT,
-            proposedPrice: payload.proposedPrice,
-            proposedTimeline: payload.proposedTimeline,
-            message: payload.message,
-            status: CounterOfferStatus.PENDING,
-        },
+        if (!proposal) {
+            throw new Error(`Proposal Not Found.`)
+        }
+        if (proposal.job.clientId !== clientId) {
+            throw new Error(`You do not have permission to counter offer on this proposal.`)
+        }
+        if (proposal.status !== ProposalStatus.PENDING) {
+            throw new Error(`Cannot create counter offer for non-pending proposals.`)
+        }
+
+        if (payload.proposedPrice <= 0) {
+            throw new Error("Price must be greater than 0");
+        }
+        if (!payload.proposedTimeline) {
+            throw new Error("Timeline is required");
+        }
+        if (payload.proposedPrice > 1000000) {
+            throw new Error("Price seems unreasonably high");
+        }
+
+        const counterOffer = await tx.counterOffer.create({
+            data: {
+                proposalId,
+                offeredBy: CounterOfferOrigin.CLIENT,
+                proposedPrice: payload.proposedPrice,
+                proposedTimeline: payload.proposedTimeline,
+                message: payload.message,
+                status: CounterOfferStatus.PENDING,
+            },
+        });
+
+        return counterOffer;
     });
 
-    return counterOffer
+    return counterOffer;
 }
 
 const acceptCounterOffer = async (counterOfferId: string, freelancerId: string) => {
-    const counterOffer = await prisma.counterOffer.findUnique({
-        where: { id: counterOfferId },
-        include: { proposal: true }
-    })
+    const accept = await prisma.$transaction(async (tx) => {
+        const counterOffer = await tx.counterOffer.findUnique({
+            where: { id: counterOfferId },
+            include: { proposal: true }
+        })
 
-    if (!counterOffer) {
-        throw new Error(`Counter offer not found.`)
-    }
-    if (counterOffer.proposal.freelancerId !== freelancerId) {
-        throw new Error(`You do not have permission to accept this offer.`)
-    }
-    if (counterOffer.status !== CounterOfferStatus.PENDING) {
-        throw new Error("Counteroffer has already been responded.");
-    }
-
-    const updated = await prisma.counterOffer.update({
-        where: { id: counterOfferId },
-        data: {
-            status: CounterOfferStatus.ACCEPTED
+        if (!counterOffer) {
+            throw new Error(`Counter offer not found.`)
         }
-    })
+        if (counterOffer.proposal.freelancerId !== freelancerId) {
+            throw new Error(`You do not have permission to accept this offer.`)
+        }
+        if (counterOffer.status !== CounterOfferStatus.PENDING) {
+            throw new Error("Counteroffer has already been responded.");
+        }
 
-    if (counterOffer.offeredBy === CounterOfferOrigin.CLIENT) {
-        await prisma.proposal.update({
-            where: { id: counterOffer.proposalId },
+        const updated = await tx.counterOffer.update({
+            where: { id: counterOfferId },
             data: {
-                proposedPrice: counterOffer.proposedPrice,
-                proposedTimeline: counterOffer.proposedTimeline,
-            },
-        });
-    }
+                status: CounterOfferStatus.ACCEPTED
+            }
+        })
+        if (counterOffer.offeredBy === CounterOfferOrigin.CLIENT) {
+            await tx.proposal.update({
+                where: { id: counterOffer.proposalId },
+                data: {
+                    proposedPrice: counterOffer.proposedPrice,
+                    proposedTimeline: counterOffer.proposedTimeline,
+                },
+            });
+        }
 
-    return updated;
+        return updated;
+    })
+    return accept;
 }
 
 const rejectCounterOffer = async (counterOfferId: string, freelancerId: string) => {

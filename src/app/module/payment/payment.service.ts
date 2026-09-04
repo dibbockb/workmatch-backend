@@ -25,6 +25,21 @@ const initiatePayment = async (contractId: string, clientId: string) => {
     const platformCommission = Math.round(amount * 0.1 * 100) / 100
     const freelancerEarns = amount - platformCommission
 
+    const existingPayment = await prisma.payment.findFirst({
+        where: {
+            contractId,
+            status: {
+                in: [
+                    PaymentStatus.PENDING,
+                    PaymentStatus.SUCCEEDED
+                ]
+            }
+        }
+    });
+    if (existingPayment) {
+        throw new Error("Payment already exists for this contract.");
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100),
         currency: 'usd',
@@ -57,9 +72,35 @@ const initiatePayment = async (contractId: string, clientId: string) => {
 }
 
 const handleWebhook = async (event: Stripe.Event) => {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+    const payment = await prisma.payment.findUnique({
+        where: {
+            stripePaymentIntentId: paymentIntent.id
+        }
+    });
+    if (!payment) {
+        throw new Error("Payment record not found.");
+    }
+
+    const expectedAmount = Math.round(
+        Number(payment.amount) * 100
+    );
+    if (paymentIntent.amount !== expectedAmount) {
+        throw new Error("Payment amount mismatch.");
+    }
+    if (paymentIntent.currency !== "usd") {
+        throw new Error("Payment currency mismatch.");
+    }
+
     if (event.type === 'payment_intent.succeeded') {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
         const contractId = paymentIntent.metadata.contractId;
+        if (!contractId) {
+            throw new Error("Missing contract ID in payment metadata.");
+        }
+        if (payment.contractId !== contractId) {
+            throw new Error("Payment contract mismatch.");
+        }
 
         await prisma.payment.update({
             where: { stripePaymentIntentId: paymentIntent.id },
@@ -67,7 +108,6 @@ const handleWebhook = async (event: Stripe.Event) => {
                 status: PaymentStatus.SUCCEEDED
             }
         });
-
     } else if (event.type === 'payment_intent.payment_failed') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
 

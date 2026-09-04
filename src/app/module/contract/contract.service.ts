@@ -1,3 +1,4 @@
+import { Prisma } from "../../../generated/prisma/client"
 import { ContractStatus, JobStatus, ProposalStatus, UserRoles } from "../../../generated/prisma/enums"
 import { prisma } from "../../lib/prisma"
 
@@ -98,7 +99,7 @@ const getContract = async (contractId: string, userId: string, role: string) => 
 }
 
 const getMyContracts = async (userId: string, role: string) => {
-    const where: any = { deletedAt: null };
+    const where: Prisma.ContractWhereInput = { deletedAt: null };
 
     if (role === UserRoles.CLIENT) {
         where.clientId = userId;
