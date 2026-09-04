@@ -18,10 +18,33 @@ model Contract {
   updatedAt      DateTime       @updatedAt
   deletedAt      DateTime?
 
-  // payments Payment[]
+  payments Payment[]
 
   @@index([clientId])
   @@index([freelancerId])
   @@index([status])
   @@map("contracts")
+}
+
+model Payment {
+  id                    String        @id @default(uuid(7))
+  contractId            String
+  contract              Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  clientId              String
+  client                User          @relation("clientPayments", fields: [clientId], references: [id])
+  freelancerId          String
+  freelancer            User          @relation("freelancerPayments", fields: [freelancerId], references: [id])
+  amount                Decimal       @db.Decimal(10, 2)
+  platformCommission    Decimal       @db.Decimal(10, 2)
+  freelancerEarns       Decimal       @db.Decimal(10, 2)
+  status                PaymentStatus @default(PENDING)
+  stripePaymentIntentId String?       @unique
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([contractId])
+  @@index([clientId])
+  @@index([freelancerId])
+  @@index([status])
+  @@map("payments")
 }

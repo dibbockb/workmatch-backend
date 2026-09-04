@@ -42,3 +42,10 @@ enum ContractStatus {
   DISPUTED
   CANCELLED
 }
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}

@@ -20,6 +20,8 @@ model User {
   proposals             Proposal[]  @relation("userProposals")
   contractsAsClient     Contract[]  @relation("clientContracts")
   contractsAsFreelancer Contract[]  @relation("freelancerContracts")
+  paymentsSent          Payment[]   @relation("clientPayments")
+  paymentsReceived      Payment[]   @relation("freelancerPayments")
 
   @@unique([email])
   @@index([email])
