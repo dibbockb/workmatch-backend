@@ -13,10 +13,10 @@ router.get(
     ProposalController.getFreelancerProposals
 );
 router.get("/job/:jobId", auth(UserRoles.CLIENT), ProposalController.getProposalsForJob);
-router.get("/:proposalId", ProposalController.getProposalById);
+router.get("/:proposalId", auth(UserRoles.CLIENT, UserRoles.FREELANCER), ProposalController.getProposalById);
 
 router.post(
-    "/:proposalId/withdraw",    
+    "/:proposalId/withdraw",
     auth(UserRoles.FREELANCER),
     ProposalController.withdrawProposal
 );

@@ -147,6 +147,7 @@ const getProposalById = async (proposalId: string) => {
     if (!proposal) {
         throw new Error(`Proposal not found.`)
     }
+    
 
     return proposal;
 }

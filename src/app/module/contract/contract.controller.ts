@@ -23,7 +23,7 @@ const getContract = catchAsync(async (req: Request, res: Response) => {
     const { contractId } = req.params;
     const user = req.user as IRequestUser;
 
-    const result = await ContractService.getContract(contractId as string, user.userId);
+    const result = await ContractService.getContract(contractId as string, user.userId, user.role);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

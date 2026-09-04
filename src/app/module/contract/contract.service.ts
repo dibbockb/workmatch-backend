@@ -20,6 +20,12 @@ const acceptProposal = async (jobId: string, proposalId: string, clientId: strin
         if (proposal.status !== ProposalStatus.PENDING) {
             throw new Error(`Proposal is no longer pending`)
         }
+        if (proposal.job.status !== JobStatus.OPEN) {
+            throw new Error("This job is no longer open.");
+        }
+        if (proposal.job.deadline <= new Date()) {
+            throw new Error("The job deadline has passed.");
+        }
 
         await tx.proposal.updateMany({
             where: {
@@ -65,7 +71,7 @@ const acceptProposal = async (jobId: string, proposalId: string, clientId: strin
     })
 }
 
-const getContract = async (contractId: string, userId: string) => {
+const getContract = async (contractId: string, userId: string, role: string) => {
     const contract = await prisma.contract.findUnique({
         where: { id: contractId },
         include: {
@@ -81,6 +87,7 @@ const getContract = async (contractId: string, userId: string) => {
         throw new Error(`Contract Not Found`)
     }
     if (
+        role !== UserRoles.ADMIN &&
         contract.clientId !== userId &&
         contract.freelancerId !== userId
     ) {
@@ -115,26 +122,39 @@ const getMyContracts = async (userId: string, role: string) => {
 }
 
 const markAsComplete = async (contractId: string, userId: string) => {
-    const contract = await prisma.contract.findUnique({
-        where: { id: contractId }
-    })
+    const complete = await prisma.$transaction(async (tx) => {
+        const contract = await tx.contract.findUnique({
+            where: { id: contractId }
+        });
 
-    if (!contract) {
-        throw new Error(`Contract not found.`)
-    }
-    if (contract.clientId !== userId) {
-        throw new Error(`Only client can mark contract as complete.`)
-    }
-
-    const completed = await prisma.contract.update({
-        where: { id: contractId },
-        data: {
-            status: ContractStatus.COMPLETED,
-            endDate: new Date(),
+        if (!contract) {
+            throw new Error("Contract not found.");
         }
-    })
+        if (contract.clientId !== userId) {
+            throw new Error("Only client can mark contract as complete.");
+        }
+        if (contract.status !== ContractStatus.ACTIVE) {
+            throw new Error("Only active contracts can be completed.");
+        }
 
-    return completed;
+        const completedContract = await tx.contract.update({
+            where: { id: contractId },
+            data: {
+                status: ContractStatus.COMPLETED,
+                endDate: new Date(),
+            }
+        });
+        await tx.job.update({
+            where: { id: contract.jobId },
+            data: {
+                status: JobStatus.COMPLETED
+            }
+        });
+
+        return completedContract;
+    });
+
+    return complete;
 }
 
 export const ContractService = {
