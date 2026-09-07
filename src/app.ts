@@ -13,6 +13,7 @@ import { PaymentRoutes } from './app/module/payment/payment.route'
 import helmet from "helmet"
 import rateLimiter from "express-rate-limit"
 import { PaymentController } from './app/module/payment/payment.controller'
+import { AdminRoutes } from './app/module/admin/admin.route'
 
 const app: Application = express()
 app.post(
@@ -55,6 +56,7 @@ app.use('/api/v1/jobs', JobRoutes)
 app.use('/api/v1/proposals', ProposalRoutes)
 app.use('/api/v1/contracts', ContractRoutes)
 app.use('/api/v1/payment', PaymentRoutes)
+app.use('/api/v1/admin', AdminRoutes)
 
 app.get('/', async (req: Request, res: Response) => {
     res.status(httpStatus.OK).json({
