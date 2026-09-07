@@ -14,3 +14,4 @@ pnpm-workspace.yaml
 .vscode
 draft.md
 ...codebase.xml
+DUMMY_DATA_FOR_TESTING.md

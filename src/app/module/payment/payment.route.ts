@@ -11,7 +11,7 @@ router.post(
     PaymentController.initiatePayment
 );
 
-router.post("/webhook", PaymentController.handleWebhook);
+router.get("/verify/:sessionId", PaymentController.verifySession)
 router.get("/:paymentId", auth(UserRoles.CLIENT, UserRoles.FREELANCER), PaymentController.getPayment);
 
 export const PaymentRoutes = router;

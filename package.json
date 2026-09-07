@@ -7,7 +7,8 @@
         "dev": "tsx watch src/server.ts",
         "build": "tsc",
         "start": "node dist/src/server.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "stripe:webhook": "stripe listen --forward-to localhost:5000/api/v1/payment/webhook/stripe"
     },
     "keywords": [],
     "author": "",

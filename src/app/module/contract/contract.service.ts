@@ -18,9 +18,9 @@ const acceptProposal = async (jobId: string, proposalId: string, clientId: strin
         if (proposal.job.clientId !== clientId) {
             throw new Error(`You do not have permission to accept this proposal`)
         }
-        if (proposal.status !== ProposalStatus.PENDING) {
-            throw new Error(`Proposal is no longer pending`)
-        }
+        // if (proposal.status !== ProposalStatus.PENDING) {
+        //     throw new Error(`Proposal is no longer pending`)
+        // }
         if (proposal.job.status !== JobStatus.OPEN) {
             throw new Error("This job is no longer open.");
         }

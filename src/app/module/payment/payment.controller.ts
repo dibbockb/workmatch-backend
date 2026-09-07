@@ -53,9 +53,21 @@ const getPayment = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const verifySession = catchAsync(async (req: Request, res: Response) => {
+    const sessionId = req.params.sessionId
+    const payment = await PaymentService.verifySession(sessionId as string)
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Payment verified successfully",
+        data: payment
+    });
+})
 
 export const PaymentController = {
     initiatePayment,
     handleWebhook,
-    getPayment
+    getPayment,
+    verifySession
 }
