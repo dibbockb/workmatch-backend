@@ -1,0 +1,19 @@
+model Review {
+  id         String    @id @default(uuid(7))
+  contractId String    @unique
+  contract   Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User      @relation("sentReviews", fields: [reviewerId], references: [id])
+  revieweeId String
+  reviewee   User      @relation("receivedReviews", fields: [revieweeId], references: [id])
+  rating     Int       @db.SmallInt
+  comment    String
+  createdAt  DateTime  @default(now())
+  userId     String?
+  payments   Payment[]
+  user       User?     @relation(fields: [userId], references: [id])
+
+  @@index([revieweeId])
+  @@index([contractId])
+  @@map("reviews")
+}

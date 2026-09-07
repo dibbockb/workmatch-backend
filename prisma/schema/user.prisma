@@ -22,6 +22,9 @@ model User {
   contractsAsFreelancer Contract[]  @relation("freelancerContracts")
   paymentsSent          Payment[]   @relation("clientPayments")
   paymentsReceived      Payment[]   @relation("freelancerPayments")
+  sentReviews           Review[]    @relation("sentReviews")
+  receivedReviews       Review[]    @relation("receivedReviews")
+  reviewee              Review[]
 
   @@unique([email])
   @@index([email])

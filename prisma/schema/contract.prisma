@@ -19,6 +19,7 @@ model Contract {
   deletedAt      DateTime?
 
   payments Payment[]
+  review   Review?
 
   @@index([clientId])
   @@index([freelancerId])
@@ -39,8 +40,10 @@ model Payment {
   freelancerEarns       Decimal       @db.Decimal(10, 2)
   status                PaymentStatus @default(PENDING)
   stripePaymentIntentId String?       @unique
+  review                Review?       @relation(fields: [reviewId], references: [id])
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
+  reviewId              String?
 
   @@index([contractId])
   @@index([clientId])
