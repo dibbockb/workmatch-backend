@@ -38,6 +38,11 @@ const submitProposal = async (payload: ICreateProposalPayload, freelancerId: str
     }
 
     const [proposal, updatedJob] = await prisma.$transaction(async (tx) => {
+        const existing = await tx.proposal.findUnique({
+            where: { jobId_freelancerId: { jobId, freelancerId } }
+        });
+        if (existing) throw new Error("Already proposed");
+
         const newProposal = await tx.proposal.create({
             data: {
                 jobId,
@@ -77,7 +82,7 @@ const getProposals = async (jobId: string, filters: IJobFilters, clientId: strin
     const { page = 1, limit = 50, sortBy = 'submittedAt' } = filters
     const skip = (page - 1) * limit
     const job = await prisma.job.findUnique({
-        where: { id: jobId }
+        where: { id: jobId, deletedAt: null }
     })
 
     if (!job) {
@@ -100,7 +105,7 @@ const getProposals = async (jobId: string, filters: IJobFilters, clientId: strin
             jobId,
             status: {
                 in: [ProposalStatus.PENDING, ProposalStatus.ACCEPTED]
-            }
+            },
         },
         skip,
         take: limit,

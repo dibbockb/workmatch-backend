@@ -119,7 +119,7 @@ const getMyContracts = async (userId: string, role: string) => {
             freelancer: { omit: { password: true } },
             payments: true
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
     })
 
     return contracts;

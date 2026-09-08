@@ -129,7 +129,7 @@ const getJobsList = async (filters: IJobFilters) => {
                     profileImageUrl: true
                 }
             }
-        }
+        },
     })
 
     const pagination: IPaginationMeta = {
@@ -187,7 +187,7 @@ const getMyPostedJobs = async (clientId: string, filters: Partial<IJobFilters>) 
         where,
         skip,
         take: limit,
-        orderBy
+        orderBy,
     })
 
     const pagination: IPaginationMeta = {
