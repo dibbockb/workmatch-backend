@@ -18,12 +18,12 @@ import { ReviewRoutes } from './app/module/review/review.route'
 import envConfig from './app/envConfig'
 
 const app: Application = express()
+
 app.post(
     '/api/v1/payment/webhook/stripe',
     express.raw({ type: 'application/json' }),
     PaymentController.handleWebhook
 );
-
 app.use(
     cors({
         origin: config.client_url,
@@ -41,15 +41,21 @@ const globalRateLimit = rateLimiter({
     max: Number(envConfig.global_max_try),
     message: "Too many requests from this IP address. Please try again after sometime."
 })
-app.use('/api/', globalRateLimit)
-
 const authRateLimit = rateLimiter({
     windowMs: 15 * 60 * 1000,
     max: Number(envConfig.auth_max_try),
     message: "Too many login attempts. Please try again later."
 })
+const paymentRateLimit = rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: Number(envConfig.payment_max_try),
+    message: "Too many attempts. Please try again later."
+})
+
+app.use('/api/', globalRateLimit)
 app.use("/api/v1/auth/login", authRateLimit);
 app.use("/api/v1/auth/register", authRateLimit);
+app.use("/api/v1/payment", paymentRateLimit);
 
 app.use('/api/v1/auth', AuthRoutes)
 app.use('/api/v1/jobs', JobRoutes)

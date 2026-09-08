@@ -21,4 +21,5 @@ export default {
     stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET!,
     global_max_try: process.env.GLOBAL_MAX_TRY!,
     auth_max_try: process.env.AUTH_MAX_TRY!,
+    payment_max_try: process.env.PAYMENT_MAX_TRY!
 }
