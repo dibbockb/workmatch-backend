@@ -4,7 +4,7 @@ import { PaymentStatus } from "../../../generated/prisma/enums";
 import envConfig from "../../envConfig";
 import { prisma } from "../../lib/prisma"
 import { stripe } from "../../lib/stripe";
-import { logAction } from "../../utils/autditlog";
+import { logAction } from "../../utils/auditlog";
 
 const initiatePayment = async (contractId: string, clientId: string) => {
     const contract = await prisma.contract.findUnique({
@@ -26,114 +26,122 @@ const initiatePayment = async (contractId: string, clientId: string) => {
     const platformCommission = Math.round(amount * 0.1 * 100) / 100
     const freelancerEarns = amount - platformCommission
 
-    const existingPayment = await prisma.payment.findFirst({
-        where: { contractId, status: { in: [PaymentStatus.PENDING, PaymentStatus.SUCCEEDED] } }
-    });
-    if (existingPayment) {
-        if (existingPayment.status === PaymentStatus.SUCCEEDED) {
-            throw new Error("Payment already completed for this contract.");
-        }
-        const oldSession = await stripe.checkout.sessions.retrieve(existingPayment.stripeSessionId!);
-        if (oldSession.status === 'open') {
-            return {
-                payment: existingPayment,
-                checkoutUrl: oldSession.url,
-                publishableKey: envConfig.stripe_publishable_key
-            };
-        }
-
-        await prisma.payment.update({
-            where: { id: existingPayment.id },
-            data: { status: PaymentStatus.FAILED }
+    const session = await prisma.$transaction(async (tx) => {
+        const existingPayment = await tx.payment.findFirst({
+            where: { contractId, status: { in: [PaymentStatus.PENDING, PaymentStatus.SUCCEEDED] } }
         });
-    }
+        if (existingPayment) {
+            if (existingPayment.status === PaymentStatus.SUCCEEDED) {
+                throw new Error("Payment already completed for this contract.");
+            }
+            const oldSession = await stripe.checkout.sessions.retrieve(existingPayment.stripeSessionId!);
+            if (oldSession.status === 'open') {
+                return {
+                    payment: existingPayment,
+                    checkoutUrl: oldSession.url,
+                    publishableKey: envConfig.stripe_publishable_key
+                };
+            }
 
-    const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [
-            {
-                price_data: {
-                    currency: 'usd',
-                    product_data: {
-                        name: `Contract Payment: ${contract.job.title}`,
+            await tx.payment.update({
+                where: { id: existingPayment.id },
+                data: { status: PaymentStatus.FAILED }
+            });
+        }
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: `Contract Payment: ${contract.job.title}`,
+                        },
+                        unit_amount: Math.round(amount * 100),
                     },
-                    unit_amount: Math.round(amount * 100),
+                    quantity: 1,
                 },
-                quantity: 1,
-            },
-        ],
-        mode: 'payment',
-        success_url: `${envConfig.client_url}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${envConfig.client_url}/payment/cancel`,
-        metadata: {
-            contractId,
-            clientId,
-            freelancerId: contract.freelancerId,
-            jobId: contract.jobId
+            ],
+            mode: 'payment',
+            success_url: `${envConfig.client_url}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${envConfig.client_url}/payment/cancel`,
+            metadata: {
+                contractId,
+                clientId,
+                freelancerId: contract.freelancerId,
+                jobId: contract.jobId
+            }
+        })
+
+        const payment = await tx.payment.create({
+            data: {
+                contractId,
+                clientId,
+                freelancerId: contract.freelancerId,
+                amount: new Prisma.Decimal(amount),
+                platformCommission: new Prisma.Decimal(platformCommission),
+                freelancerEarns: new Prisma.Decimal(freelancerEarns),
+                status: PaymentStatus.PENDING,
+                stripeSessionId: session.id
+            }
+        });
+
+        return {
+            payment,
+            checkoutUrl: session.url,
         }
     })
 
-    const payment = await prisma.payment.create({
-        data: {
-            contractId,
-            clientId,
-            freelancerId: contract.freelancerId,
-            amount: new Prisma.Decimal(amount),
-            platformCommission: new Prisma.Decimal(platformCommission),
-            freelancerEarns: new Prisma.Decimal(freelancerEarns),
-            status: PaymentStatus.PENDING,
-            stripeSessionId: session.id
-        }
-    });
-
-    return {
-        payment,
-        checkoutUrl: session.url,
-        publishableKey: envConfig.stripe_publishable_key
-    }
+    return session;
 }
 
 const handleWebhook = async (event: Stripe.Event) => {
-    switch (event.type) {
-        case 'checkout.session.completed': {
-            const session = event.data.object as Stripe.Checkout.Session;
+    return await prisma.$transaction(async (tx) => {
+        switch (event.type) {
+            case 'checkout.session.completed': {
+                const session = event.data.object as Stripe.Checkout.Session;
 
-            const payment = await prisma.payment.findUnique({
-                where: { stripeSessionId: session.id }
-            });
-            if (!payment) throw new Error("Payment record not found.");
+                const payment = await tx.payment.findUnique({
+                    where: { stripeSessionId: session.id }
+                });
+                if (!payment) throw new Error("Payment record not found.");
 
-            const expectedAmount = Math.round(Number(payment.amount) * 100);
-            if (session.amount_total !== expectedAmount) {
-                throw new Error("Payment amount mismatch.");
+                const expectedAmount = Math.round(Number(payment.amount) * 100);
+                if (session.amount_total !== expectedAmount) {
+                    throw new Error("Payment amount mismatch.");
+                }
+                if (session.currency !== "usd") {
+                    throw new Error("Payment currency mismatch.");
+                }
+                if (payment.status === PaymentStatus.SUCCEEDED) return;
+
+                await tx.payment.update({
+                    where: { id: payment.id },
+                    data: { status: PaymentStatus.SUCCEEDED }
+                });
+
+                await logAction(payment.clientId, "PAYMENT_SUCCEEDED", "Payment", payment.id);
+
+                break;
             }
-            // if (session.currency !== "usd") {
-            //     throw new Error("Payment currency mismatch.");
-            // }
 
-            await prisma.payment.update({
-                where: { id: payment.id },
-                data: { status: PaymentStatus.SUCCEEDED }
-            });
+            case 'checkout.session.expired': {
+                const session = event.data.object as Stripe.Checkout.Session;
 
-            await logAction(null, "PAYMENT_SUCCEEDED", "Payment", payment.id);
+                await prisma.payment.updateMany({
+                    where: { stripeSessionId: session.id, status: PaymentStatus.PENDING },
+                    data: { status: PaymentStatus.FAILED }
+                });
+                await logAction(null, "PAYMENT_FAILED", "Payment", session.id as string);
 
-            break;
+                break;
+            }
+
+            default:
+                return;
         }
-
-        case 'checkout.session.expired': {
-            const session = event.data.object as Stripe.Checkout.Session;
-
-            await prisma.payment.updateMany({
-                where: { stripeSessionId: session.id, status: PaymentStatus.PENDING },
-                data: { status: PaymentStatus.FAILED }
-            });
-            break;
-        }
-
-        default:
-            return;
-    }
+    })
 }
 
 const getPayment = async (paymentId: string, userId: string) => {

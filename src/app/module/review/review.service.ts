@@ -1,7 +1,7 @@
 import { Prisma } from "../../../generated/prisma/client";
 import { ContractStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma"
-import { logAction } from "../../utils/autditlog";
+import { logAction } from "../../utils/auditlog";
 import { ICreateReviewPayload } from "./review.validation";
 
 const createReview = async (payload: ICreateReviewPayload, reviewerId: string) => {

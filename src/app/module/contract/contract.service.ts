@@ -1,7 +1,7 @@
 import { Prisma } from "../../../generated/prisma/client"
 import { ContractStatus, JobStatus, ProposalStatus, UserRoles } from "../../../generated/prisma/enums"
 import { prisma } from "../../lib/prisma"
-import { logAction } from "../../utils/autditlog"
+import { logAction } from "../../utils/auditlog"
 
 const acceptProposal = async (jobId: string, proposalId: string, clientId: string) => {
     return await prisma.$transaction(async (tx) => {

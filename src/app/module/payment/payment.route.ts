@@ -11,7 +11,7 @@ router.post(
     PaymentController.initiatePayment
 );
 
-router.get("/verify/:sessionId", PaymentController.verifySession)
+router.get("/verify/:sessionId", auth(UserRoles.ADMIN, UserRoles.CLIENT, UserRoles.FREELANCER), PaymentController.verifySession)
 router.get("/:paymentId", auth(UserRoles.CLIENT, UserRoles.FREELANCER), PaymentController.getPayment);
 
 export const PaymentRoutes = router;

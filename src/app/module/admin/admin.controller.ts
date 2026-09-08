@@ -18,7 +18,7 @@ const getUsers = catchAsync(async (req: Request, res: Response) => {
 const blockUser = catchAsync(async (req: Request, res: Response) => {
     const userId = req.params.userId;
     const reason = req.body;
-    const blocked = AdminService.blockUser(userId as string, reason)
+    const blocked = await AdminService.blockUser(userId as string, reason)
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -31,7 +31,7 @@ const blockUser = catchAsync(async (req: Request, res: Response) => {
 const unblockUser = catchAsync(async (req: Request, res: Response) => {
     const userId = req.params.userId;
     const reason = req.body;
-    const unblocked = AdminService.blockUser(userId as string, reason)
+    const unblocked = await AdminService.unblockUser(userId as string, reason)
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -47,7 +47,7 @@ const getDashboard = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Dashboard stats fetched successfuly.",
+        message: "Dashboard stats fetched successfully.",
         data: stats
     })
 })
@@ -58,7 +58,7 @@ const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: "Audit lgos fetched successfuly.",
+        message: "Audit logs fetched successfully.",
         data: stats
     })
 })
