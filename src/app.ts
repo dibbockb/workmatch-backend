@@ -15,6 +15,7 @@ import rateLimiter from "express-rate-limit"
 import { PaymentController } from './app/module/payment/payment.controller'
 import { AdminRoutes } from './app/module/admin/admin.route'
 import { ReviewRoutes } from './app/module/review/review.route'
+import envConfig from './app/envConfig'
 
 const app: Application = express()
 app.post(
@@ -22,8 +23,6 @@ app.post(
     express.raw({ type: 'application/json' }),
     PaymentController.handleWebhook
 );
-
-app.use(express.json());
 
 app.use(
     cors({
@@ -37,20 +36,20 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(cookieParser())
 
-const appRateLimit = rateLimiter({
+const globalRateLimit = rateLimiter({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: Number(envConfig.global_max_try),
     message: "Too many requests from this IP address. Please try again after sometime."
 })
-// app.use('/api/', appRateLimit)
+app.use('/api/', globalRateLimit)
 
 const authRateLimit = rateLimiter({
     windowMs: 15 * 60 * 1000,
-    max: 5,
+    max: Number(envConfig.auth_max_try),
     message: "Too many login attempts. Please try again later."
 })
-// app.use("/api/v1/auth/login", authRateLimit);
-// app.use("/api/v1/auth/register", authRateLimit);
+app.use("/api/v1/auth/login", authRateLimit);
+app.use("/api/v1/auth/register", authRateLimit);
 
 app.use('/api/v1/auth', AuthRoutes)
 app.use('/api/v1/jobs', JobRoutes)
