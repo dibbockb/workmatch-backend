@@ -25,6 +25,7 @@ model User {
   sentReviews           Review[]    @relation("sentReviews")
   receivedReviews       Review[]    @relation("receivedReviews")
   reviewee              Review[]
+  auditLogs             AuditLog[]
 
   @@unique([email])
   @@index([email])

@@ -28,22 +28,22 @@ model Contract {
 }
 
 model Payment {
-  id                    String        @id @default(uuid(7))
-  contractId            String        @unique
-  contract              Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  clientId              String
-  client                User          @relation("clientPayments", fields: [clientId], references: [id])
-  freelancerId          String
-  freelancer            User          @relation("freelancerPayments", fields: [freelancerId], references: [id])
-  amount                Decimal       @db.Decimal(10, 2)
-  platformCommission    Decimal       @db.Decimal(10, 2)
-  freelancerEarns       Decimal       @db.Decimal(10, 2)
-  status                PaymentStatus @default(PENDING)
-  stripePaymentIntentId String?       @unique
-  review                Review?       @relation(fields: [reviewId], references: [id])
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-  reviewId              String?
+  id                 String        @id @default(uuid(7))
+  contractId         String        @unique
+  contract           Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  clientId           String
+  client             User          @relation("clientPayments", fields: [clientId], references: [id])
+  freelancerId       String
+  freelancer         User          @relation("freelancerPayments", fields: [freelancerId], references: [id])
+  amount             Decimal       @db.Decimal(10, 2)
+  platformCommission Decimal       @db.Decimal(10, 2)
+  freelancerEarns    Decimal       @db.Decimal(10, 2)
+  status             PaymentStatus @default(PENDING)
+  stripeSessionId    String?       @unique
+  review             Review?       @relation(fields: [reviewId], references: [id])
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  reviewId           String?
 
   @@index([contractId])
   @@index([clientId])
