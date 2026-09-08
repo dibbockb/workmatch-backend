@@ -1,5 +1,6 @@
 import { UserStatus } from "../../../generated/prisma/enums"
 import { prisma } from "../../lib/prisma"
+import { logAction } from "../../utils/autditlog"
 
 const getUsers = async (page = 1, limit = 20) => {
     const users = await prisma.user.findMany({
@@ -14,7 +15,7 @@ const getUsers = async (page = 1, limit = 20) => {
     }
 }
 
-const blockUser = async (userId: string) => {
+const blockUser = async (userId: string, reason: string) => {
     const user = await prisma.user.findUnique({
         where: { id: userId }
     })
@@ -23,10 +24,33 @@ const blockUser = async (userId: string) => {
         throw new Error(`No such user exists`)
     }
 
-    return await prisma.user.update({
+    const unblocked = await prisma.user.update({
+        where: { id: userId },
+        data: { status: UserStatus.ACTIVE }
+    })
+
+    await logAction(null, "USER_UNBLOCKED", "User", userId, { reason });
+
+    return unblocked;
+}
+
+const unblockUser = async (userId: string, reason: string) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId }
+    })
+
+    if (!user) {
+        throw new Error(`No such user exists`)
+    }
+
+    const blocked = await prisma.user.update({
         where: { id: userId },
         data: { status: UserStatus.BLOCKED }
     })
+
+    await logAction(null, "USER_BLOCKED", "User", userId, { reason });
+
+    return blocked;
 }
 
 const getDashboard = async () => {
@@ -41,8 +65,22 @@ const getDashboard = async () => {
     }
 }
 
+const getAuditLogs = async (page = 1, limit = 20) => {
+    const logs = await prisma.auditLog.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+    })
+
+    return {
+        logs,
+        total: await prisma.auditLog.count()
+    }
+}
+
 export const AdminService = {
     getUsers,
     blockUser,
-    getDashboard
+    getDashboard,
+    getAuditLogs,
+    unblockUser
 }

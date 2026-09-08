@@ -4,6 +4,7 @@ import { PaymentStatus } from "../../../generated/prisma/enums";
 import envConfig from "../../envConfig";
 import { prisma } from "../../lib/prisma"
 import { stripe } from "../../lib/stripe";
+import { logAction } from "../../utils/autditlog";
 
 const initiatePayment = async (contractId: string, clientId: string) => {
     const contract = await prisma.contract.findUnique({
@@ -32,7 +33,7 @@ const initiatePayment = async (contractId: string, clientId: string) => {
         if (existingPayment.status === PaymentStatus.SUCCEEDED) {
             throw new Error("Payment already completed for this contract.");
         }
-        const oldSession = await stripe.checkout.sessions.retrieve(existingPayment.stripePaymentIntentId!);
+        const oldSession = await stripe.checkout.sessions.retrieve(existingPayment.stripeSessionId!);
         if (oldSession.status === 'open') {
             return {
                 payment: existingPayment,
@@ -81,7 +82,7 @@ const initiatePayment = async (contractId: string, clientId: string) => {
             platformCommission: new Prisma.Decimal(platformCommission),
             freelancerEarns: new Prisma.Decimal(freelancerEarns),
             status: PaymentStatus.PENDING,
-            stripePaymentIntentId: session.id
+            stripeSessionId: session.id
         }
     });
 
@@ -98,7 +99,7 @@ const handleWebhook = async (event: Stripe.Event) => {
             const session = event.data.object as Stripe.Checkout.Session;
 
             const payment = await prisma.payment.findUnique({
-                where: { stripePaymentIntentId: session.id }
+                where: { stripeSessionId: session.id }
             });
             if (!payment) throw new Error("Payment record not found.");
 
@@ -114,6 +115,9 @@ const handleWebhook = async (event: Stripe.Event) => {
                 where: { id: payment.id },
                 data: { status: PaymentStatus.SUCCEEDED }
             });
+
+            await logAction(null, "PAYMENT_SUCCEEDED", "Payment", payment.id);
+
             break;
         }
 
@@ -121,7 +125,7 @@ const handleWebhook = async (event: Stripe.Event) => {
             const session = event.data.object as Stripe.Checkout.Session;
 
             await prisma.payment.updateMany({
-                where: { stripePaymentIntentId: session.id, status: PaymentStatus.PENDING },
+                where: { stripeSessionId: session.id, status: PaymentStatus.PENDING },
                 data: { status: PaymentStatus.FAILED }
             });
             break;
@@ -155,12 +159,12 @@ const verifySession = async (sessionId: string) => {
 
     if (session.payment_status === 'paid') {
         await prisma.payment.updateMany({
-            where: { stripePaymentIntentId: sessionId, status: PaymentStatus.PENDING },
+            where: { stripeSessionId: sessionId, status: PaymentStatus.PENDING },
             data: { status: PaymentStatus.SUCCEEDED }
         });
     }
 
-    return prisma.payment.findUnique({ where: { stripePaymentIntentId: sessionId } });
+    return prisma.payment.findUnique({ where: { stripeSessionId: sessionId } });
 }
 
 export const PaymentService = {

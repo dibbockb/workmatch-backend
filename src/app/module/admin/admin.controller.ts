@@ -17,13 +17,27 @@ const getUsers = catchAsync(async (req: Request, res: Response) => {
 
 const blockUser = catchAsync(async (req: Request, res: Response) => {
     const userId = req.params.userId;
-    const blocked = AdminService.blockUser(userId as string)
+    const reason = req.body;
+    const blocked = AdminService.blockUser(userId as string, reason)
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Users blocked successfully",
         data: blocked
+    })
+})
+
+const unblockUser = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.params.userId;
+    const reason = req.body;
+    const unblocked = AdminService.blockUser(userId as string, reason)
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Users unblocked successfully",
+        data: unblocked
     })
 })
 
@@ -38,8 +52,23 @@ const getDashboard = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
+    const stats = await AdminService.getAuditLogs()
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Audit lgos fetched successfuly.",
+        data: stats
+    })
+})
+
+
+
 export const AdminController = {
     getUsers,
     blockUser,
-    getDashboard
+    unblockUser,
+    getDashboard,
+    getAuditLogs
 }

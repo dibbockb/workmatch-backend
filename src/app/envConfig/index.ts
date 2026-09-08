@@ -19,4 +19,6 @@ export default {
     stripe_secret_key: process.env.STRIPE_SECRET_KEY!,
     stripe_webhook_key: process.env.STRIPE_WEBHOOK_KEY!,
     stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET!,
+    global_max_try: process.env.GLOBAL_MAX_TRY!,
+    auth_max_try: process.env.AUTH_MAX_TRY!,
 }

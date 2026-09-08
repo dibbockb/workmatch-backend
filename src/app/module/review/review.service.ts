@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma"
+import { logAction } from "../../utils/autditlog";
 import { ICreateReviewPayload } from "./review.validation";
 
 const createReview = async (payload: ICreateReviewPayload, reviewerId: string) => {
@@ -17,10 +18,14 @@ const createReview = async (payload: ICreateReviewPayload, reviewerId: string) =
         throw new Error("Only client or freelancer can review");
     }
 
-    return await prisma.review.create({
+    const review = await prisma.review.create({
         data: { contractId, reviewerId, revieweeId, rating, comment },
         include: { reviewer: { omit: { password: true } } }
     });
+
+    await logAction(reviewerId, "REVIEW_CREATED", "Review", review.id);
+
+    return review;
 };
 
 const getFreelancerReviews = async (freelancerId: string) => {
