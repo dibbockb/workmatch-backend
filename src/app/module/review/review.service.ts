@@ -1,3 +1,5 @@
+import { Prisma } from "../../../generated/prisma/client";
+import { ContractStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma"
 import { logAction } from "../../utils/autditlog";
 import { ICreateReviewPayload } from "./review.validation";
@@ -10,7 +12,7 @@ const createReview = async (payload: ICreateReviewPayload, reviewerId: string) =
     });
 
     if (!contract) throw new Error("Contract not found");
-    if (contract.status !== "COMPLETED") throw new Error("Contract is not completed yet.");
+    if (contract.status !== ContractStatus.COMPLETED) throw new Error("Contract is not completed yet.");
 
     const revieweeId = reviewerId === contract.clientId ? contract.freelancerId : contract.clientId;
 
@@ -18,14 +20,26 @@ const createReview = async (payload: ICreateReviewPayload, reviewerId: string) =
         throw new Error("Only client or freelancer can review");
     }
 
-    const review = await prisma.review.create({
-        data: { contractId, reviewerId, revieweeId, rating, comment },
-        include: { reviewer: { omit: { password: true } } }
+    return await prisma.$transaction(async (tx) => {
+        const review = await tx.review.create({
+            data: { contractId, reviewerId, revieweeId, rating, comment }
+        });
+
+        const reviews = await tx.review.findMany({
+            where: { revieweeId }
+        });
+        const avgRating = reviews.length > 0
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+            : 0;
+
+        await tx.user.update({
+            where: { id: revieweeId },
+            data: { averageRating: new Prisma.Decimal(avgRating) }
+        });
+        await logAction(reviewerId, "REVIEW_CREATED", "Review", review.id);
+
+        return review;
     });
-
-    await logAction(reviewerId, "REVIEW_CREATED", "Review", review.id);
-
-    return review;
 };
 
 const getFreelancerReviews = async (freelancerId: string) => {
