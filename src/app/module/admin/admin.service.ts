@@ -29,7 +29,7 @@ const blockUser = async (userId: string, reason: string) => {
         data: { status: UserStatus.BLOCKED }
     })
 
-    await logAction(null, "USER_BLOCKED", "User", userId, { reason });
+    await logAction(prisma, null, "USER_BLOCKED", "User", userId, { reason });
 
     return blocked;
 }
@@ -48,7 +48,7 @@ const unblockUser = async (userId: string, reason: string) => {
         data: { status: UserStatus.ACTIVE }
     })
 
-    await logAction(null, "USER_UNBLOCKED", "User", userId, { reason });
+    await logAction(prisma, null, "USER_UNBLOCKED", "User", userId, { reason });
 
     return unblocked;
 }

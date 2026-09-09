@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma, PrismaClient } from "../../../generated/prisma/client";
 import { PaymentStatus } from "../../../generated/prisma/enums";
 import envConfig from "../../envConfig";
 import { prisma } from "../../lib/prisma"
@@ -121,7 +121,7 @@ const handleWebhook = async (event: Stripe.Event) => {
                     data: { status: PaymentStatus.SUCCEEDED }
                 });
 
-                await logAction(payment.clientId, "PAYMENT_SUCCEEDED", "Payment", payment.id);
+                await logAction(tx, payment.clientId, "PAYMENT_SUCCEEDED", "Payment", payment.id);
 
                 break;
             }
@@ -133,7 +133,7 @@ const handleWebhook = async (event: Stripe.Event) => {
                     where: { stripeSessionId: session.id, status: PaymentStatus.PENDING },
                     data: { status: PaymentStatus.FAILED }
                 });
-                await logAction(null, "PAYMENT_FAILED", "Payment", session.id as string);
+                await logAction(prisma, null, "PAYMENT_FAILED", "Payment", session.id as string);
 
                 break;
             }

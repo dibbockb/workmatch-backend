@@ -21,5 +21,8 @@ export default {
     stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET!,
     global_max_try: process.env.GLOBAL_MAX_TRY!,
     auth_max_try: process.env.AUTH_MAX_TRY!,
-    payment_max_try: process.env.PAYMENT_MAX_TRY!
+    payment_max_try: process.env.PAYMENT_MAX_TRY!,
+    cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+    cloudinary_api_key: process.env.CLOUDINARY_API_KEY!,
+    cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET!,
 }

@@ -1,4 +1,4 @@
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma, PrismaClient } from "../../../generated/prisma/client";
 import { ContractStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma"
 import { logAction } from "../../utils/auditlog";
@@ -36,7 +36,7 @@ const createReview = async (payload: ICreateReviewPayload, reviewerId: string) =
             where: { id: revieweeId },
             data: { averageRating: new Prisma.Decimal(avgRating) }
         });
-        await logAction(reviewerId, "REVIEW_CREATED", "Review", review.id);
+        await logAction(tx, reviewerId, "REVIEW_CREATED", "Review", review.id);
 
         return review;
     });

@@ -1,4 +1,4 @@
-import { Prisma } from "../../../generated/prisma/client"
+import { Prisma, PrismaClient } from "../../../generated/prisma/client"
 import { ContractStatus, JobStatus, ProposalStatus, UserRoles } from "../../../generated/prisma/enums"
 import { prisma } from "../../lib/prisma"
 import { logAction } from "../../utils/auditlog"
@@ -64,7 +64,7 @@ const acceptProposal = async (jobId: string, proposalId: string, clientId: strin
             }
         })
 
-        await logAction(clientId, "CONTRACT_ACCEPTED", "CONTRACT", contract.id);
+        await logAction(tx, clientId, "CONTRACT_ACCEPTED", "CONTRACT", contract.id);
 
         await tx.job.update({
             where: { id: jobId },
