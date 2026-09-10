@@ -6,6 +6,7 @@ import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import Stripe from "stripe";
 import { stripe } from "../../lib/stripe";
+import envConfig from "../../envConfig";
 
 const initiatePayment = catchAsync(async (req: Request, res: Response) => {
     const user = req.user as IRequestUser;
@@ -29,7 +30,7 @@ const handleWebhook = catchAsync(async (req: Request, res: Response) => {
         event = stripe.webhooks.constructEvent(
             req.body,
             sig,
-            process.env.STRIPE_WEBHOOK_SECRET || ""
+            envConfig.stripe_webhook_secret
         );
     } catch (err) {
         return res.status(400).send(`Webhook Error: ${err}`);
