@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { Prisma, PrismaClient } from "../../../generated/prisma/client";
-import { PaymentStatus } from "../../../generated/prisma/enums";
+import { ContractStatus, PaymentStatus } from "../../../generated/prisma/enums";
 import envConfig from "../../envConfig";
 import { prisma } from "../../lib/prisma"
 import { stripe } from "../../lib/stripe";
@@ -120,6 +120,21 @@ const handleWebhook = async (event: Stripe.Event) => {
                     where: { id: payment.id },
                     data: { status: PaymentStatus.SUCCEEDED }
                 });
+
+                await tx.freelancer.update({
+                    where: { userId: payment.freelancerId },
+                    data: { totalEarnings: { increment: payment.freelancerEarns } }
+                })
+
+                await tx.client.update({
+                    where: { userId: payment.clientId },
+                    data: { totalSpent: { increment: payment.amount } }
+                })
+
+                await tx.contract.update({
+                    where: { id: payment.id },
+                    data: { status: ContractStatus.COMPLETED }
+                })
 
                 await logAction(tx, payment.clientId, "PAYMENT_SUCCEEDED", "Payment", payment.id);
 
