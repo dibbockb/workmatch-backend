@@ -11,7 +11,6 @@ pnpm-lock.yaml
 yarn.lock
 package-lock.json
 pnpm-workspace.yaml
-bun.lock
 .vscode
 draft.md
 ...codebase.xml

@@ -4,6 +4,8 @@ import { JobOrderByWithRelationInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { IJobFilters, IPaginationMeta } from "./job.interface";
 import { ICreateJobPayload, IUpdateJobPayload } from "./job.validation";
+import { AppError } from "../../utils/AppError";
+import httpStatus from "http-status";
 
 const createJob = async (payload: ICreateJobPayload, clientId: string,) => {
     const job = await prisma.job.create({
@@ -28,11 +30,11 @@ const deleteJob = async (jobId: string, clientId: string) => {
     })
 
     if (!job) {
-        throw new Error("Job Not Found")
+        throw new AppError(httpStatus.NOT_FOUND, "Job Not Found")
     }
 
     if (job.clientId !== clientId) {
-        throw new Error(`You do not have permission for this action.`)
+        throw new AppError(httpStatus.FORBIDDEN, `You do not have permission for this action.`)
     }
 
     const deleted = await prisma.job.update({
@@ -52,10 +54,10 @@ const closeJob = async (jobId: string, clientId: string) => {
     })
 
     if (!job) {
-        throw new Error(`No such job found.`)
+        throw new AppError(httpStatus.NOT_FOUND, `No such job found.`)
     }
     if (job.clientId !== clientId) {
-        throw new Error(`You do not have permission to perform this action.`)
+        throw new AppError(httpStatus.FORBIDDEN, `You do not have permission to perform this action.`)
     }
 
     const closed = await prisma.job.update({
@@ -156,7 +158,7 @@ const getJobById = async (jobId: string) => {
     })
 
     if (!job) {
-        throw new Error(`Job not found.`)
+        throw new AppError(httpStatus.NOT_FOUND, `Job not found.`)
     }
 
     return job;
@@ -207,20 +209,20 @@ const updateJob = async (jobId: string, payload: IUpdateJobPayload, clientId: st
     })
 
     if (!job) {
-        throw new Error(`Job not found`)
+        throw new AppError(httpStatus.NOT_FOUND, `Job not found`)
     }
     if (job.clientId !== clientId) {
-        throw new Error(`You do not have permission to do this action.`)
+        throw new AppError(httpStatus.FORBIDDEN, `You do not have permission to do this action.`)
     }
     if (job.status !== JobStatus.OPEN) {
-        throw new Error(`Can only update open jobs.`)
+        throw new AppError(httpStatus.CONFLICT, `Can only update open jobs.`)
     }
 
     const newMin = payload.budgetMin ?? job.budgetMin;
     const newMax = payload.budgetMax ?? job.budgetMax;
 
     if (newMax < newMin) {
-        throw new Error("Maximum budget cannot be less than minimum budget.");
+        throw new AppError(httpStatus.BAD_REQUEST, "Maximum budget cannot be less than minimum budget.");
     }
 
     const updated = await prisma.job.update({

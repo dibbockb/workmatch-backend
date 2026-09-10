@@ -2,6 +2,8 @@ import { Prisma } from "../../../generated/prisma/client";
 import { ContractStatus, CounterOfferOrigin, CounterOfferStatus, JobStatus, ProposalStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 import { logAction } from "../../utils/auditlog";
+import { AppError } from "../../utils/AppError";
+import httpStatus from "http-status";
 import { IJobFilters } from "../job/job.interface";
 import { ICounterOfferResponse, IProposalFilters } from "./proposal.interface";
 import { ICreateCounterOfferPayload, ICreateProposalPayload } from "./proposal.validation";
@@ -13,13 +15,13 @@ const submitProposal = async (payload: ICreateProposalPayload, freelancerId: str
     })
 
     if (!job) {
-        throw new Error(`No job found.`)
+        throw new AppError(httpStatus.NOT_FOUND, `No job found.`)
     }
     if (job.status !== JobStatus.OPEN) {
-        throw new Error(`This job is no longer open for proposals.`)
+        throw new AppError(httpStatus.CONFLICT, `This job is no longer open for proposals.`)
     }
     if (new Date(job.deadline) < new Date()) {
-        throw new Error(`Deadline has passed.`)
+        throw new AppError(httpStatus.CONFLICT, `Deadline has passed.`)
     }
 
     const existingProposal = await prisma.proposal.findUnique({
@@ -32,17 +34,17 @@ const submitProposal = async (payload: ICreateProposalPayload, freelancerId: str
     })
 
     if (existingProposal) {
-        throw new Error(`You have already submitted a proposal for this gig.`)
+        throw new AppError(httpStatus.CONFLICT, `You have already submitted a proposal for this gig.`)
     }
     if (job.clientId === freelancerId) {
-        throw new Error(`You can not submit a proposal for the job you posted yourself.`)
+        throw new AppError(httpStatus.FORBIDDEN, `You can not submit a proposal for the job you posted yourself.`)
     }
 
     const [proposal, updatedJob] = await prisma.$transaction(async (tx) => {
         const existing = await tx.proposal.findUnique({
             where: { jobId_freelancerId: { jobId, freelancerId } }
         });
-        if (existing) throw new Error("Already proposed");
+        if (existing) throw new AppError(httpStatus.CONFLICT, "Already proposed");
 
         const newProposal = await tx.proposal.create({
             data: {
@@ -87,10 +89,10 @@ const getProposals = async (jobId: string, filters: IJobFilters, clientId: strin
     })
 
     if (!job) {
-        throw new Error(`Job Not Found.`)
+        throw new AppError(httpStatus.NOT_FOUND, `Job Not Found.`)
     }
     if (job.clientId !== clientId) {
-        throw new Error("You do not have permission to view these proposals.");
+        throw new AppError(httpStatus.FORBIDDEN, "You do not have permission to view these proposals.");
     }
 
     let orderBy: Prisma.ProposalOrderByWithRelationInput = { submittedAt: "desc" };
@@ -151,7 +153,7 @@ const getProposalById = async (proposalId: string) => {
     })
 
     if (!proposal) {
-        throw new Error(`Proposal not found.`)
+        throw new AppError(httpStatus.NOT_FOUND, `Proposal not found.`)
     }
 
 
@@ -211,14 +213,14 @@ const withdrawProposal = async (proposalId: string, freelancerId: string) => {
     })
 
     if (!proposal) {
-        throw new Error(`Proposal not found.`)
+        throw new AppError(httpStatus.NOT_FOUND, `Proposal not found.`)
     }
     if (proposal.freelancerId !== freelancerId) {
-        throw new Error(`You do not have permission to withdraw this proposal.`)
+        throw new AppError(httpStatus.FORBIDDEN, `You do not have permission to withdraw this proposal.`)
     }
 
     if (proposal.status !== ProposalStatus.PENDING) {
-        throw new Error(`You can only withdraw pending proposals`)
+        throw new AppError(httpStatus.CONFLICT, `You can only withdraw pending proposals`)
     }
 
     const withdrawn = await prisma.proposal.update({
@@ -239,7 +241,7 @@ const createCounterOffer = async (proposalId: string, clientId: string, payload:
             }
         });
         if (existingPending) {
-            throw new Error("There is already a pending counteroffer for this proposal.");
+            throw new AppError(httpStatus.CONFLICT, "There is already a pending counteroffer for this proposal.");
         }
 
         const proposal = await prisma.proposal.findUnique({
@@ -248,23 +250,23 @@ const createCounterOffer = async (proposalId: string, clientId: string, payload:
         })
 
         if (!proposal) {
-            throw new Error(`Proposal Not Found.`)
+            throw new AppError(httpStatus.NOT_FOUND, `Proposal Not Found.`)
         }
         if (proposal.job.clientId !== clientId) {
-            throw new Error(`You do not have permission to counter offer on this proposal.`)
+            throw new AppError(httpStatus.FORBIDDEN, `You do not have permission to counter offer on this proposal.`)
         }
         if (proposal.status !== ProposalStatus.PENDING) {
-            throw new Error(`Cannot create counter offer for non-pending proposals.`)
+            throw new AppError(httpStatus.CONFLICT, `Cannot create counter offer for non-pending proposals.`)
         }
 
         if (payload.proposedPrice <= 0) {
-            throw new Error("Price must be greater than 0");
+            throw new AppError(httpStatus.BAD_REQUEST, "Price must be greater than 0");
         }
         if (!payload.proposedTimeline) {
-            throw new Error("Timeline is required");
+            throw new AppError(httpStatus.BAD_REQUEST, "Timeline is required");
         }
         if (payload.proposedPrice > 1000000) {
-            throw new Error("Price seems unreasonably high");
+            throw new AppError(httpStatus.BAD_REQUEST, "Price seems unreasonably high");
         }
 
         const counterOffer = await tx.counterOffer.create({
@@ -296,13 +298,13 @@ const acceptCounterOffer = async (counterOfferId: string, freelancerId: string) 
         })
 
         if (!counterOffer) {
-            throw new Error(`Counter offer not found.`)
+            throw new AppError(httpStatus.NOT_FOUND, `Counter offer not found.`)
         }
         if (counterOffer.proposal.freelancerId !== freelancerId) {
-            throw new Error(`You do not have permission to accept this offer.`)
+            throw new AppError(httpStatus.FORBIDDEN, `You do not have permission to accept this offer.`)
         }
         if (counterOffer.status !== CounterOfferStatus.PENDING) {
-            throw new Error("Counteroffer has already been responded.");
+            throw new AppError(httpStatus.CONFLICT, "Counteroffer has already been responded.");
         }
 
         const updated = await tx.counterOffer.update({
@@ -362,13 +364,13 @@ const rejectCounterOffer = async (counterOfferId: string, freelancerId: string) 
     })
 
     if (!counterOffer) {
-        throw new Error("Counter offer not found");
+        throw new AppError(httpStatus.NOT_FOUND, "Counter offer not found");
     }
     if (counterOffer.proposal.freelancerId !== freelancerId) {
-        throw new Error(`You do not have permission to reject this offer.`)
+        throw new AppError(httpStatus.FORBIDDEN, `You do not have permission to reject this offer.`)
     }
     if (counterOffer.status !== CounterOfferStatus.PENDING) {
-        throw new Error("Counter offer has already been responded.");
+        throw new AppError(httpStatus.CONFLICT, "Counter offer has already been responded.");
     }
 
     const updated = await prisma.counterOffer.update({

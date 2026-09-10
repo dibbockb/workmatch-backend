@@ -2,6 +2,8 @@ import { Prisma, PrismaClient } from "../../../generated/prisma/client"
 import { ContractStatus, JobStatus, ProposalStatus, UserRoles } from "../../../generated/prisma/enums"
 import { prisma } from "../../lib/prisma"
 import { logAction } from "../../utils/auditlog"
+import { AppError } from "../../utils/AppError"
+import httpStatus from "http-status"
 
 const acceptProposal = async (jobId: string, proposalId: string, clientId: string) => {
     return await prisma.$transaction(async (tx) => {
@@ -11,22 +13,22 @@ const acceptProposal = async (jobId: string, proposalId: string, clientId: strin
         })
 
         if (!proposal) {
-            throw new Error(`Proposal Not Found`)
+            throw new AppError(httpStatus.NOT_FOUND, `Proposal Not Found`)
         }
         if (proposal.jobId !== jobId) {
-            throw new Error(`Proposal does not belong to this job.`)
+            throw new AppError(httpStatus.FORBIDDEN, `Proposal does not belong to this job.`)
         }
         if (proposal.job.clientId !== clientId) {
-            throw new Error(`You do not have permission to accept this proposal`)
+            throw new AppError(httpStatus.FORBIDDEN, `You do not have permission to accept this proposal`)
         }
         if (proposal.status !== ProposalStatus.PENDING) {
-            throw new Error(`Proposal is no longer pending`)
+            throw new AppError(httpStatus.CONFLICT, `Proposal is no longer pending`)
         }
         if (proposal.job.status !== JobStatus.OPEN) {
-            throw new Error("This job is no longer open.");
+            throw new AppError(httpStatus.CONFLICT, "This job is no longer open.");
         }
         if (proposal.job.deadline <= new Date()) {
-            throw new Error("The job deadline has passed.");
+            throw new AppError(httpStatus.CONFLICT, "The job deadline has passed.");
         }
 
         await tx.proposal.updateMany({
@@ -88,14 +90,14 @@ const getContract = async (contractId: string, userId: string, role: string) => 
     });
 
     if (!contract) {
-        throw new Error(`Contract Not Found`)
+        throw new AppError(httpStatus.NOT_FOUND, `Contract Not Found`)
     }
     if (
         role !== UserRoles.ADMIN &&
         contract.clientId !== userId &&
         contract.freelancerId !== userId
     ) {
-        throw new Error("You do not have permission to view this contract.");
+        throw new AppError(httpStatus.FORBIDDEN, "You do not have permission to view this contract.");
     }
 
     return contract;
@@ -132,13 +134,13 @@ const markAsComplete = async (contractId: string, userId: string) => {
         });
 
         if (!contract) {
-            throw new Error("Contract not found.");
+            throw new AppError(httpStatus.NOT_FOUND, "Contract not found.");
         }
         if (contract.clientId !== userId) {
-            throw new Error("Only client can mark contract as complete.");
+            throw new AppError(httpStatus.FORBIDDEN, "Only client can mark contract as complete.");
         }
         if (contract.status !== ContractStatus.ACTIVE) {
-            throw new Error("Only active contracts can be completed.");
+            throw new AppError(httpStatus.CONFLICT, "Only active contracts can be completed.");
         }
 
         const completedContract = await tx.contract.update({

@@ -1,6 +1,8 @@
 import { UserStatus } from "../../../generated/prisma/enums"
 import { prisma } from "../../lib/prisma"
 import { logAction } from "../../utils/auditlog"
+import { AppError } from "../../utils/AppError"
+import httpStatus from "http-status"
 
 const getUsers = async (page = 1, limit = 20) => {
     const users = await prisma.user.findMany({
@@ -21,7 +23,7 @@ const blockUser = async (userId: string, reason: string) => {
     })
 
     if (!user) {
-        throw new Error(`No such user exists`)
+        throw new AppError(httpStatus.NOT_FOUND, `No such user exists`)
     }
 
     const blocked = await prisma.user.update({
@@ -40,7 +42,7 @@ const unblockUser = async (userId: string, reason: string) => {
     })
 
     if (!user) {
-        throw new Error(`No such user exists`)
+        throw new AppError(httpStatus.NOT_FOUND, `No such user exists`)
     }
 
     const unblocked = await prisma.user.update({

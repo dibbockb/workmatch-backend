@@ -4,6 +4,8 @@ import { UserRoles, UserStatus } from '../../../generated/prisma/enums'
 import config from '../../envConfig'
 import { prisma } from '../../lib/prisma'
 import { jwtUtils } from '../../utils/jwt'
+import { AppError } from '../../utils/AppError'
+import httpStatus from "http-status"
 import {
     ILoginUserPayload,
     IRegisterUserPayload,
@@ -22,7 +24,7 @@ const registerUser = async (payload: IRegisterUserPayload) => {
     })
 
     if (isUserExists) {
-        throw new Error('User with this email already exists')
+        throw new AppError(httpStatus.CONFLICT, 'User with this email already exists')
     }
 
     const hashedPassword = await bcrypt.hash(password, Number(envConfig.bcrypt_salt_rounds))
@@ -103,21 +105,21 @@ const loginUser = async (payload: ILoginUserPayload) => {
     })
 
     if (!user) {
-        throw new Error('Invalid Credentials')
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid Credentials')
     }
 
     if (user.status === UserStatus.BLOCKED) {
-        throw new Error('Your account is blocked')
+        throw new AppError(httpStatus.FORBIDDEN, 'Your account is blocked')
     }
 
     if (user.isDeleted || user.status === UserStatus.DELETED) {
-        throw new Error('User Account not found')
+        throw new AppError(httpStatus.NOT_FOUND, 'User Account not found')
     }
 
     const isPasswordMatched = await bcrypt.compare(password, user.password)
 
     if (!isPasswordMatched) {
-        throw new Error('Invalid credentials')
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid credentials')
     }
 
     const tokenPayload: ITokenPayload = {
@@ -160,7 +162,7 @@ const getMe = async (user: IRequestUser) => {
     })
 
     if (!isUserExists) {
-        throw new Error('User not found')
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found')
     }
 
     return isUserExists
@@ -170,7 +172,7 @@ const refreshTokenHandler = async (token: string) => {
     const verifiedRefreshToken = jwtUtils.verifyToken(token, config.jwt_refresh_secret)
 
     if (!verifiedRefreshToken.success || !verifiedRefreshToken.data) {
-        throw new Error('Invalid refresh token')
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid refresh token')
     }
 
     const data = verifiedRefreshToken.data as JwtPayload
@@ -180,7 +182,7 @@ const refreshTokenHandler = async (token: string) => {
     })
 
     if (!user || user.isDeleted || user.status !== UserStatus.ACTIVE) {
-        throw new Error('User is inactive or not found')
+        throw new AppError(httpStatus.NOT_FOUND, 'User is inactive or not found')
     }
 
     const tokenPayload = {

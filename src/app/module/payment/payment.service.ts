@@ -5,6 +5,8 @@ import envConfig from "../../envConfig";
 import { prisma } from "../../lib/prisma"
 import { stripe } from "../../lib/stripe";
 import { logAction } from "../../utils/auditlog";
+import { AppError } from "../../utils/AppError";
+import httpStatus from "http-status";
 
 const initiatePayment = async (contractId: string, clientId: string) => {
     const contract = await prisma.contract.findUnique({
@@ -16,10 +18,10 @@ const initiatePayment = async (contractId: string, clientId: string) => {
     });
 
     if (!contract) {
-        throw new Error(`Contract not found.`)
+        throw new AppError(httpStatus.NOT_FOUND, `Contract not found.`)
     }
     if (contract.clientId !== clientId) {
-        throw new Error(`You do not have permission to initialize payment for this contract.`)
+        throw new AppError(httpStatus.FORBIDDEN, `You do not have permission to initialize payment for this contract.`)
     }
 
     const amount = Number(contract.agreedPrice);
@@ -32,7 +34,7 @@ const initiatePayment = async (contractId: string, clientId: string) => {
         });
         if (existingPayment) {
             if (existingPayment.status === PaymentStatus.SUCCEEDED) {
-                throw new Error("Payment already completed for this contract.");
+                throw new AppError(httpStatus.CONFLICT, "Payment already completed for this contract.");
             }
             const oldSession = await stripe.checkout.sessions.retrieve(existingPayment.stripeSessionId!);
             if (oldSession.status === 'open') {
@@ -105,14 +107,14 @@ const handleWebhook = async (event: Stripe.Event) => {
                 const payment = await tx.payment.findUnique({
                     where: { stripeSessionId: session.id }
                 });
-                if (!payment) throw new Error("Payment record not found.");
+                if (!payment) throw new AppError(httpStatus.NOT_FOUND, "Payment record not found.");
 
                 const expectedAmount = Math.round(Number(payment.amount) * 100);
                 if (session.amount_total !== expectedAmount) {
-                    throw new Error("Payment amount mismatch.");
+                    throw new AppError(httpStatus.BAD_REQUEST, "Payment amount mismatch.");
                 }
                 if (session.currency !== "usd") {
-                    throw new Error("Payment currency mismatch.");
+                    throw new AppError(httpStatus.BAD_REQUEST, "Payment currency mismatch.");
                 }
                 if (payment.status === PaymentStatus.SUCCEEDED) return;
 
@@ -165,13 +167,13 @@ const getPayment = async (paymentId: string, userId: string) => {
     })
 
     if (!payment) {
-        throw new Error(`Payment not found.`)
+        throw new AppError(httpStatus.NOT_FOUND, `Payment not found.`)
     }
     if (
         payment.clientId !== userId &&
         payment.freelancerId !== userId
     ) {
-        throw new Error("You do not have permission to view this payment.");
+        throw new AppError(httpStatus.FORBIDDEN, "You do not have permission to view this payment.");
     }
 
     return payment;

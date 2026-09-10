@@ -2,6 +2,8 @@ import { Prisma, PrismaClient } from "../../../generated/prisma/client";
 import { ContractStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma"
 import { logAction } from "../../utils/auditlog";
+import { AppError } from "../../utils/AppError";
+import httpStatus from "http-status";
 import { ICreateReviewPayload } from "./review.validation";
 
 const createReview = async (payload: ICreateReviewPayload, reviewerId: string) => {
@@ -16,16 +18,16 @@ const createReview = async (payload: ICreateReviewPayload, reviewerId: string) =
         }
     });
 
-    if (!contract) throw new Error("Contract not found");
+    if (!contract) throw new AppError(httpStatus.NOT_FOUND, "Contract not found");
     if (contract.status !== ContractStatus.COMPLETED)
-        throw new Error("Contract is not completed yet.");
+        throw new AppError(httpStatus.CONFLICT, "Contract is not completed yet.");
 
     const isReviewingFreelancer = reviewerId === contract.clientId;
 
     const revieweeId = reviewerId === contract.clientId ? contract.freelancerId : contract.clientId;
 
     if (reviewerId !== contract.clientId && reviewerId !== contract.freelancerId) {
-        throw new Error("Only client or freelancer can review");
+        throw new AppError(httpStatus.FORBIDDEN, "Only client or freelancer can review");
     }
 
     return await prisma.$transaction(async (tx) => {
