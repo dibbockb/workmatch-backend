@@ -8,11 +8,19 @@ const createReview = async (payload: ICreateReviewPayload, reviewerId: string) =
     const { contractId, rating, comment } = payload;
 
     const contract = await prisma.contract.findUnique({
-        where: { id: contractId }
+        where: { id: contractId },
+        select: {
+            status: true,
+            clientId: true,
+            freelancerId: true,
+        }
     });
 
     if (!contract) throw new Error("Contract not found");
-    if (contract.status !== ContractStatus.COMPLETED) throw new Error("Contract is not completed yet.");
+    if (contract.status !== ContractStatus.COMPLETED)
+        throw new Error("Contract is not completed yet.");
+
+    const isReviewingFreelancer = reviewerId === contract.clientId;
 
     const revieweeId = reviewerId === contract.clientId ? contract.freelancerId : contract.clientId;
 
@@ -32,10 +40,23 @@ const createReview = async (payload: ICreateReviewPayload, reviewerId: string) =
             ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
             : 0;
 
-        await tx.user.update({
-            where: { id: revieweeId },
-            data: { averageRating: new Prisma.Decimal(avgRating) }
-        });
+        if (isReviewingFreelancer) {
+            await tx.freelancer.update({
+                where: { userId: revieweeId },
+                data: {
+                    averageRating: new Prisma.Decimal(avgRating)
+                }
+            })
+        } else {
+            await tx.client.update({
+                where: { userId: revieweeId },
+                data: {
+                    averageRating: new Prisma.Decimal(avgRating)
+                }
+            })
+        }
+
+
         await logAction(tx, reviewerId, "REVIEW_CREATED", "Review", review.id);
 
         return review;
