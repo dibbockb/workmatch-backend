@@ -1,6 +1,7 @@
 import { Prisma } from "../../../generated/prisma/client";
-import { CounterOfferOrigin, CounterOfferStatus, JobStatus, ProposalStatus } from "../../../generated/prisma/enums";
+import { ContractStatus, CounterOfferOrigin, CounterOfferStatus, JobStatus, ProposalStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
+import { logAction } from "../../utils/auditlog";
 import { IJobFilters } from "../job/job.interface";
 import { ICounterOfferResponse, IProposalFilters } from "./proposal.interface";
 import { ICreateCounterOfferPayload, ICreateProposalPayload } from "./proposal.validation";
@@ -287,7 +288,11 @@ const acceptCounterOffer = async (counterOfferId: string, freelancerId: string) 
     const accept = await prisma.$transaction(async (tx) => {
         const counterOffer = await tx.counterOffer.findUnique({
             where: { id: counterOfferId },
-            include: { proposal: true }
+            include: {
+                proposal: {
+                    include: { job: true }
+                }
+            }
         })
 
         if (!counterOffer) {
@@ -306,15 +311,44 @@ const acceptCounterOffer = async (counterOfferId: string, freelancerId: string) 
                 status: CounterOfferStatus.ACCEPTED
             }
         })
+
         if (counterOffer.offeredBy === CounterOfferOrigin.CLIENT) {
             await tx.proposal.update({
                 where: { id: counterOffer.proposalId },
                 data: {
                     proposedPrice: counterOffer.proposedPrice,
                     proposedTimeline: counterOffer.proposedTimeline,
+                    status: ProposalStatus.ACCEPTED
                 },
             });
         }
+
+        await tx.contract.create({
+            data: {
+                jobId: counterOffer.proposal.jobId,
+                proposalId: counterOffer.proposal.id,
+                clientId: counterOffer.proposal.job.clientId,
+                freelancerId,
+                agreedPrice: counterOffer.proposedPrice,
+                agreedTimeline: counterOffer.proposedTimeline,
+                status: ContractStatus.ACTIVE,
+            }
+        })
+
+        await tx.job.update({
+            where: { id: counterOffer.proposal.jobId },
+            data: { status: JobStatus.IN_PROGRESS }
+        })
+
+        await tx.proposal.updateMany({
+            where: {
+                jobId: counterOffer.proposal.jobId,
+                id: { not: counterOffer.proposal.id }
+            },
+            data: { status: ProposalStatus.REJECTED }
+        })
+
+        await logAction(tx, freelancerId, "COUNTER_OFFER_ACCEPTED", "CounterOffer", counterOfferId);
 
         return updated;
     })
