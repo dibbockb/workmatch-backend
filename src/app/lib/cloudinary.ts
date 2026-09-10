@@ -1,5 +1,6 @@
-import envConfig from '../envConfig';
 import { v2 as cloudinary } from 'cloudinary';
+import { Readable } from 'stream';
+import envConfig from '../envConfig';
 
 cloudinary.config({
     cloud_name: envConfig.cloudinary_cloud_name,
@@ -7,16 +8,27 @@ cloudinary.config({
     api_secret: envConfig.cloudinary_api_secret
 });
 
-export const uploadToCloudinary = async (filePath: string, folder: string) => {
-    const result = await cloudinary.uploader.upload(filePath, {
-        folder: `workmatch/${folder}`,
-        resource_type: 'auto'
-    });
+export const uploadToCloudinary = async (
+    buffer: Buffer,
+    filename: string
+) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                resource_type: 'auto',
+                public_id: filename.split('.')[0]
+            },
+            (error, result) => {
+                if (error) reject(error);
+                else resolve({
+                    url: result?.secure_url,
+                    publicId: result?.public_id
+                });
+            }
+        );
 
-    return {
-        url: result.secure_url,
-        publicId: result.public_id
-    };
+        Readable.from(buffer).pipe(stream);
+    });
 };
 
 export const deleteFromCloudinary = async (publicId: string) => {

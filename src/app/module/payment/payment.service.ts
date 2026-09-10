@@ -129,11 +129,11 @@ const handleWebhook = async (event: Stripe.Event) => {
             case 'checkout.session.expired': {
                 const session = event.data.object as Stripe.Checkout.Session;
 
-                await prisma.payment.updateMany({
+                await tx.payment.updateMany({
                     where: { stripeSessionId: session.id, status: PaymentStatus.PENDING },
                     data: { status: PaymentStatus.FAILED }
                 });
-                await logAction(prisma, null, "PAYMENT_FAILED", "Payment", session.id as string);
+                await logAction(tx, null, "PAYMENT_FAILED", "Payment", session.id as string);
 
                 break;
             }

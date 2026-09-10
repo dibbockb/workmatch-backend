@@ -14,7 +14,7 @@ import envConfig from '../../envConfig'
 
 
 const registerUser = async (payload: IRegisterUserPayload) => {
-    const { name, email, password, role, companyName } = payload
+    const { name, email, password, role, companyName, profileImageUrl } = payload
     const normalizedEmail = email.trim().toLocaleLowerCase()
 
     const isUserExists = await prisma.user.findUnique({
@@ -35,6 +35,7 @@ const registerUser = async (payload: IRegisterUserPayload) => {
                 password: hashedPassword,
                 role: role as UserRoles,
                 status: UserStatus.ACTIVE,
+                profileImageUrl,
                 emailVerified: false,
             },
             omit: { password: true },

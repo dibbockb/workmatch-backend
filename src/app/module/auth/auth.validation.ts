@@ -21,7 +21,8 @@ export const RegisterValidationSchema = z.object({
     companyName: z
         .string()
         .min(2, { message: 'Company name must be at least 2 characters.' })
-        .optional()
+        .optional(),
+    profileImageUrl: z.string().optional(),
 })
 
 export const LoginValidationSchema = z.object({

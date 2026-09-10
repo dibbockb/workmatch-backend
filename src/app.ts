@@ -16,6 +16,7 @@ import { PaymentController } from './app/module/payment/payment.controller'
 import { AdminRoutes } from './app/module/admin/admin.route'
 import { ReviewRoutes } from './app/module/review/review.route'
 import envConfig from './app/envConfig'
+import { UploadRoutes } from './app/module/upload/upload.route'
 
 const app: Application = express()
 
@@ -57,6 +58,7 @@ app.use("/api/v1/auth/login", authRateLimit);
 app.use("/api/v1/auth/register", authRateLimit);
 app.use("/api/v1/payment", paymentRateLimit);
 
+
 app.use('/api/v1/auth', AuthRoutes)
 app.use('/api/v1/jobs', JobRoutes)
 app.use('/api/v1/proposals', ProposalRoutes)
@@ -64,6 +66,7 @@ app.use('/api/v1/contracts', ContractRoutes)
 app.use('/api/v1/payment', PaymentRoutes)
 app.use('/api/v1/admin', AdminRoutes)
 app.use('/api/v1/review', ReviewRoutes)
+app.use('/api/v1/upload', UploadRoutes)
 
 app.get('/', async (req: Request, res: Response) => {
     res.status(httpStatus.OK).json({

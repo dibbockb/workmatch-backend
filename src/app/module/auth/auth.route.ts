@@ -2,10 +2,11 @@ import { Router } from 'express'
 import { auth } from '../../middleware/checkAuth'
 import { AuthController } from './auth.controller'
 import { UserRoles } from '../../../generated/prisma/enums'
+import { uploadMiddleware } from '../upload/upload.controller'
 
 const router = Router()
 
-router.post('/register', AuthController.registerUser)
+router.post('/register', uploadMiddleware, AuthController.registerUser)
 router.post('/login', AuthController.loginUser)
 router.get(
     '/me',

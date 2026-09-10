@@ -2,14 +2,30 @@ import { Request, Response } from 'express'
 import httpStatus from 'http-status'
 import { catchAsync } from '../../utils/catchAsync'
 import { sendResponse } from '../../utils/sendResponse'
-import { IRequestUser } from './auth.interface'
+import { CloudinaryUploadResult, IRequestUser } from './auth.interface'
 import { AuthService } from './auth.service'
 import { LoginValidationSchema, RegisterValidationSchema } from './auth.validation'
 import envConfig from '../../envConfig'
+import { uploadToCloudinary } from '../../lib/cloudinary'
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
     const validatedPayload = RegisterValidationSchema.parse(req.body)
-    const result = await AuthService.registerUser(validatedPayload)
+    let profileImageUrl: string | undefined;
+
+    if (req.file) {
+        const result = await uploadToCloudinary(
+            req.file.buffer,
+            req.file.originalname
+        ) as CloudinaryUploadResult;
+        profileImageUrl = result.url;
+    }
+
+    const payloadWithImage = {
+        ...validatedPayload,
+        profileImageUrl
+    }
+
+    const result = await AuthService.registerUser(payloadWithImage)
 
     const { accessToken, refreshToken, user } = result
 

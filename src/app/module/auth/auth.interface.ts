@@ -18,3 +18,8 @@ export interface IRequestUser {
     name: string
     role: UserRoles
 }
+
+export interface CloudinaryUploadResult {
+    url: string;
+    public_id: string;
+}

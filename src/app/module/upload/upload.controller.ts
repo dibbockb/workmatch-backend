@@ -9,16 +9,10 @@ const uploadFile = catchAsync(async (req: Request, res: Response) => {
     if (!req.file) {
         throw new Error("No file provided");
     }
-
-    const { folder = 'uploads' } = req.query;
-
-    const fs = require('fs');
-    const path = `/tmp/${Date.now()}-${req.file.originalname}`;
-    fs.writeFileSync(path, req.file.buffer);
-
-    const result = await uploadToCloudinary(path, folder as string);
-
-    fs.unlinkSync(path);
+    const result = await uploadToCloudinary(
+        req.file.buffer,
+        req.file.originalname
+    );
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
