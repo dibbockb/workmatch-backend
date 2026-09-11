@@ -30,7 +30,7 @@ const handleWebhook = catchAsync(async (req: Request, res: Response) => {
         event = stripe.webhooks.constructEvent(
             req.body,
             sig,
-            envConfig.stripe_webhook_secret
+            envConfig.stripe_webhook_signing_secret
         );
     } catch (err) {
         return res.status(400).send(`Webhook Error: ${err}`);

@@ -76,7 +76,7 @@ const initiatePayment = async (contractId: string, clientId: string) => {
             }
         })
 
-        const payment = await tx.payment.create({
+        const createdPayment = await tx.payment.create({
             data: {
                 contractId,
                 clientId,
@@ -90,12 +90,12 @@ const initiatePayment = async (contractId: string, clientId: string) => {
         });
 
         return {
-            payment,
             checkoutUrl: session.url,
         }
     })
-
-    return session;
+    return {
+        checkoutUrl: session.checkoutUrl
+    };
 }
 
 const handleWebhook = async (event: Stripe.Event) => {
@@ -134,7 +134,7 @@ const handleWebhook = async (event: Stripe.Event) => {
                 })
 
                 await tx.contract.update({
-                    where: { id: payment.id },
+                    where: { id: payment.contractId },
                     data: { status: ContractStatus.COMPLETED }
                 })
 
