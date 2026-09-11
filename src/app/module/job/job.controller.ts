@@ -23,9 +23,9 @@ const createJob = catchAsync(async (req: Request, res: Response) => {
 
 const deleteJob = catchAsync(async (req: Request, res: Response) => {
     const user = req.user as IRequestUser
-    const { id } = req.params
+    const jobId = req.params.jobId
 
-    await JobService.deleteJob(id as string, user.userId)
+    await JobService.deleteJob(jobId as string, user.userId)
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

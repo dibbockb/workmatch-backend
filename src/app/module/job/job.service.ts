@@ -218,11 +218,13 @@ const updateJob = async (jobId: string, payload: IUpdateJobPayload, clientId: st
         throw new AppError(httpStatus.CONFLICT, `Can only update open jobs.`)
     }
 
-    const newMin = payload.budgetMin ?? job.budgetMin;
-    const newMax = payload.budgetMax ?? job.budgetMax;
+    if (payload.budgetMax && payload.budgetMin) {
+        const newMin = payload.budgetMin ?? job.budgetMin;
+        const newMax = payload.budgetMax ?? job.budgetMax;
 
-    if (newMax < newMin) {
-        throw new AppError(httpStatus.BAD_REQUEST, "Maximum budget cannot be less than minimum budget.");
+        if (newMax < newMin) {
+            throw new AppError(httpStatus.BAD_REQUEST, "Maximum budget cannot be less than minimum budget.");
+        }
     }
 
     const updated = await prisma.job.update({
