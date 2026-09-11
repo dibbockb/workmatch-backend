@@ -66,6 +66,9 @@ const createReview = async (payload: ICreateReviewPayload, reviewerId: string) =
 };
 
 const getFreelancerReviews = async (freelancerId: string) => {
+    const freelancer = await prisma.freelancer.findUnique({ where: { id: freelancerId } })
+    if (!freelancer) throw new AppError(httpStatus.NOT_FOUND, `Invalid freelancer ID`)
+
     return await prisma.review.findMany({
         where: { revieweeId: freelancerId },
         include: { reviewer: { omit: { password: true } } }
@@ -73,6 +76,9 @@ const getFreelancerReviews = async (freelancerId: string) => {
 };
 
 const getClientReviews = async (clientId: string) => {
+    const client = await prisma.freelancer.findUnique({ where: { id: clientId } })
+    if (!client) throw new AppError(httpStatus.NOT_FOUND, `Invalid Client ID`)
+
     return await prisma.review.findMany({
         where: { revieweeId: clientId },
         include: { reviewer: { omit: { password: true } } }

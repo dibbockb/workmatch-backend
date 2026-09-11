@@ -5,11 +5,11 @@ import { ContractService } from "./contract.service";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status";
 
-const acceptProposal = catchAsync(async (req: Request, res: Response) => {
+const createContract = catchAsync(async (req: Request, res: Response) => {
     const user = req.user as IRequestUser;
     const { jobId, proposalId } = req.body;
 
-    const result = await ContractService.acceptProposal(jobId, proposalId, user.userId);
+    const result = await ContractService.createContract(jobId, proposalId, user.userId);
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
@@ -60,7 +60,7 @@ const markAsComplete = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const ContractController = {
-    acceptProposal,
+    createContract,
     getContract,
     getMyContracts,
     markAsComplete

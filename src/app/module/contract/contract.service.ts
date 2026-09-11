@@ -5,7 +5,7 @@ import { logAction } from "../../utils/auditlog"
 import { AppError } from "../../utils/AppError"
 import httpStatus from "http-status"
 
-const acceptProposal = async (jobId: string, proposalId: string, clientId: string) => {
+const createContract = async (jobId: string, proposalId: string, clientId: string) => {
     return await prisma.$transaction(async (tx) => {
         const proposal = await tx.proposal.findUnique({
             where: { id: proposalId },
@@ -164,7 +164,7 @@ const markAsComplete = async (contractId: string, userId: string) => {
 }
 
 export const ContractService = {
-    acceptProposal,
+    createContract,
     getContract,
     getMyContracts,
     markAsComplete

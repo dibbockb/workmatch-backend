@@ -8,7 +8,7 @@ const router = Router()
 router.post(
     "/accept-proposal",
     auth(UserRoles.CLIENT),
-    ContractController.acceptProposal
+    ContractController.createContract
 );
 
 router.get("/:contractId",
