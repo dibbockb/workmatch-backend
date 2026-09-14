@@ -210,8 +210,6 @@ const refreshTokenHandler = async (token: string) => {
     }
 }
 
-
-
 export const AuthService = {
     registerUser,
     loginUser,

@@ -131,10 +131,24 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const logout = catchAsync(async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Logged out successfully",
+        data: null
+    });
+});
 
 export const AuthController = {
     registerUser,
     loginUser,
     getMe,
     refreshToken,
+    logout
 }
