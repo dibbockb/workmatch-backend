@@ -5,6 +5,7 @@ Backend API for **WorkMatch**, a freelance marketplace connecting clients with f
 The API handles authentication, job posting, proposals, counter-offers, contracts, payments, reviews, file uploads, administration and audit logging.
 
 **Live API:** https://api.workmatch.dibbockb.com
+
 **Repository:** https://github.com/dibbockb/workmatch-backend
 
 ## Tech Stack
@@ -84,7 +85,7 @@ cd workmatch-backend
 ### 2. Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 3. Configure environment
@@ -131,25 +132,25 @@ Never commit `.env` or real credentials.
 ### 4. Generate Prisma client
 
 ```bash
-npx prisma generate
+pnpx prisma generate
 ```
 
 ### 5. Run migrations
 
 ```bash
-npx prisma migrate deploy
+pnpx prisma migrate deploy
 ```
 
 For local development, you can use:
 
 ```bash
-npx prisma migrate dev
+pnpx prisma migrate dev
 ```
 
 ### 6. Start development server
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 The API will be available at:
@@ -163,13 +164,13 @@ http://localhost:5000
 Build the project:
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 Start the compiled application:
 
 ```bash
-npm start
+pnpm start
 ```
 
 ## Stripe Webhooks
@@ -177,7 +178,7 @@ npm start
 For local Stripe webhook development:
 
 ```bash
-npm run stripe:webhook
+pnpm run stripe:webhook
 ```
 
 This forwards Stripe events to:
@@ -221,10 +222,10 @@ The schema is split into multiple Prisma files covering:
 ## Available Scripts
 
 ```bash
-npm run dev              # Development server with watch mode
-npm run build            # Compile TypeScript
-npm start                # Start production build
-npm run stripe:webhook   # Forward Stripe webhooks locally
+pnpm run dev              # Development server with watch mode
+pnpm run build            # Compile TypeScript
+pnpm start                # Start production build
+pnpm run stripe:webhook   # Forward Stripe webhooks locally
 ```
 
 ## Architecture

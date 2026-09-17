@@ -70,17 +70,17 @@ const getFreelancerReviews = async (freelancerId: string) => {
     if (!freelancer) throw new AppError(httpStatus.NOT_FOUND, `Invalid freelancer ID`)
 
     return await prisma.review.findMany({
-        where: { revieweeId: freelancerId },
+        where: { revieweeId: freelancer.userId },
         include: { reviewer: { omit: { password: true } } }
     });
 };
 
 const getClientReviews = async (clientId: string) => {
-    const client = await prisma.freelancer.findUnique({ where: { id: clientId } })
+    const client = await prisma.client.findUnique({ where: { id: clientId } })
     if (!client) throw new AppError(httpStatus.NOT_FOUND, `Invalid Client ID`)
 
     return await prisma.review.findMany({
-        where: { revieweeId: clientId },
+        where: { revieweeId: client.userId },
         include: { reviewer: { omit: { password: true } } }
     });
 };
