@@ -133,11 +133,6 @@ const handleWebhook = async (event: Stripe.Event) => {
                     data: { totalSpent: { increment: payment.amount } }
                 })
 
-                await tx.contract.update({
-                    where: { id: payment.contractId },
-                    data: { status: ContractStatus.COMPLETED }
-                })
-
                 await logAction(tx, payment.clientId, "PAYMENT_SUCCEEDED", "Payment", payment.id);
 
                 break;
@@ -183,7 +178,7 @@ const verifySession = async (sessionId: string) => {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (session.payment_status === 'paid') {
-        await prisma.payment.updateMany({
+        await prisma.payment.update({
             where: { stripeSessionId: sessionId, status: PaymentStatus.PENDING },
             data: { status: PaymentStatus.SUCCEEDED }
         });

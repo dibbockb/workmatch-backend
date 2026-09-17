@@ -40,7 +40,7 @@ const submitProposal = async (payload: ICreateProposalPayload, freelancerId: str
         throw new AppError(httpStatus.FORBIDDEN, `You can not submit a proposal for the job you posted yourself.`)
     }
 
-    const [proposal, updatedJob] = await prisma.$transaction(async (tx) => {
+    const submitted = await prisma.$transaction(async (tx) => {
         const existing = await tx.proposal.findUnique({
             where: { jobId_freelancerId: { jobId, freelancerId } }
         });
@@ -77,8 +77,10 @@ const submitProposal = async (payload: ICreateProposalPayload, freelancerId: str
                 }
             }
         })
-        return [newProposal, job]
+        return newProposal
     })
+
+    return submitted;
 }
 
 const getProposals = async (jobId: string, filters: IJobFilters, clientId: string) => {
@@ -244,7 +246,7 @@ const createCounterOffer = async (proposalId: string, clientId: string, payload:
             throw new AppError(httpStatus.CONFLICT, "There is already a pending counteroffer for this proposal.");
         }
 
-        const proposal = await prisma.proposal.findUnique({
+        const proposal = await tx.proposal.findUnique({
             where: { id: proposalId },
             include: { job: true }
         })
