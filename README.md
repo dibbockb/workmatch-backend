@@ -119,7 +119,6 @@ JWT_REFRESH_EXPIRES_IN=7d
 
 STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_WEBHOOK_KEY=your_stripe_webhook_key
 STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 
 CLOUDINARY_CLOUD_NAME=your_cloud_name
