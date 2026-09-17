@@ -1,9 +1,9 @@
 import httpStatus from "http-status";
 import { ZodError } from "zod";
-import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { MulterError } from "multer";
 import { Prisma } from "../../generated/prisma/client";
 import { TErrorSource, TGenericErrorResponse } from "../middleware/globalErrorHandler";
+import jwt from 'jsonwebtoken';
 
 export const handleZodError = (err: ZodError): TGenericErrorResponse => {
     const errorSources: TErrorSource[] = err.issues.map((issue) => ({
@@ -66,10 +66,10 @@ export const handlePrismaValidationError = (): TGenericErrorResponse => ({
     errorSources: [{ path: "", message: "Missing or wrongly typed fields" }],
 });
 
-export const handleJwtError = (err: JsonWebTokenError): TGenericErrorResponse => ({
+export const handleJwtError = (err: jwt.JsonWebTokenError): TGenericErrorResponse => ({
     statusCode: httpStatus.UNAUTHORIZED,
     message:
-        err instanceof TokenExpiredError
+        err instanceof jwt.TokenExpiredError
             ? "Session expired. Please log in again."
             : "Invalid token. Please log in again.",
     errorSources: [{ path: "authorization", message: err.message }],

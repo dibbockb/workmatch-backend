@@ -5,8 +5,8 @@ import { AppError } from '../utils/AppError';
 import envConfig from '../envConfig';
 import { ZodError } from 'zod';
 import { handleJwtError, handleMulterError, handlePrismaKnownError, handlePrismaValidationError, handleZodError } from '../utils/errorHandlers';
-import { JsonWebTokenError } from 'jsonwebtoken';
 import { MulterError } from 'multer';
+import jwt from 'jsonwebtoken';
 
 export type TErrorSource = {
     path: string;
@@ -41,7 +41,7 @@ export const globalErrorHandler = (
         statusCode = httpStatus.SERVICE_UNAVAILABLE;
         message = "Database is unavailable";
         errorSources = [{ path: "", message: "Could not reach the database server" }];
-    } else if (err instanceof JsonWebTokenError) {
+    } else if (err instanceof jwt.JsonWebTokenError) {
         ({ statusCode, message, errorSources } = handleJwtError(err));
     } else if (err instanceof MulterError) {
         ({ statusCode, message, errorSources } = handleMulterError(err));
