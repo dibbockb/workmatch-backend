@@ -8,6 +8,7 @@ import { CreateJobValidationSchema, UpdateJobValidationSchema } from "./job.vali
 const router = Router()
 
 router.get('/', JobController.getJobsList)
+router.get('/search', JobController.searchJobs)
 router.get('/my-posted', auth(UserRoles.CLIENT), JobController.getMyPostedJobs)
 router.get('/:jobId', JobController.getJobById)
 router.post('/', auth(UserRoles.CLIENT), validateRequest(CreateJobValidationSchema), JobController.createJob)

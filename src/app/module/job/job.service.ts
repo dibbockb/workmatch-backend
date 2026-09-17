@@ -76,6 +76,7 @@ const getJobsList = async (filters: IJobFilters) => {
         skills,
         budgetMax,
         budgetMin,
+        search,
         sortBy = "createdAt",
         page = 1,
         limit = 20,
@@ -106,6 +107,12 @@ const getJobsList = async (filters: IJobFilters) => {
         where.budgetMin = {
             lte: budgetMax
         }
+    }
+    if (search && search.trim()) {
+        where.OR = [
+            { title: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+        ]
     }
 
     let orderBy: JobOrderByWithRelationInput = { createdAt: 'desc' }
