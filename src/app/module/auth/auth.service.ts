@@ -169,13 +169,8 @@ const getMe = async (user: IRequestUser) => {
 }
 
 const refreshTokenHandler = async (token: string) => {
-    const verifiedRefreshToken = jwtUtils.verifyToken(token, config.jwt_refresh_secret)
 
-    if (!verifiedRefreshToken.success || !verifiedRefreshToken.data) {
-        throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid refresh token')
-    }
-
-    const data = verifiedRefreshToken.data as JwtPayload
+    const data = jwtUtils.verifyToken(token, config.jwt_refresh_secret) as JwtPayload
 
     const user = await prisma.user.findUnique({
         where: { id: data.userId },

@@ -34,13 +34,9 @@ export const auth = (...requiredRoles: UserRoles[]) => {
             throw new AppError(httpStatus.UNAUTHORIZED, "You are not logged in. Please log in to access this resource.");
         }
 
-        const verifiedToken = jwtUtils.verifyToken(token, config.jwt_access_secret);
+        const verifiedToken = jwtUtils.verifyToken(token, config.jwt_access_secret) as JwtPayload;
 
-        if (!verifiedToken.success) {
-            throw new AppError(httpStatus.UNAUTHORIZED, verifiedToken.error);
-        }
-
-        const { email, name, userId, role } = verifiedToken.data as JwtPayload;
+        const { email, name, userId, role } = verifiedToken;
 
         if (requiredRoles.length && !requiredRoles.includes(role)) {
             throw new AppError(httpStatus.FORBIDDEN, "Forbidden. You don't have permission to access this resource.");
