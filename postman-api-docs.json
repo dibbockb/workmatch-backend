@@ -1,0 +1,1052 @@
+{
+  "info": {
+    "_postman_id": "97eda268-66b4-486e-afaf-abd926b6fb44",
+    "name": "workmatch-api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54867039",
+    "_collection_link": "https://go.postman.co/collection/54867039-97eda268-66b4-486e-afaf-abd926b6fb44?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// {\"name\":\"Joe Client\",\"email\":\"client@workmatch.dibbockb.com\",\"password\":\"!123QWEe\",\"role\":\"CLIENT\",\"companyName\":\"Acme Inc\"}\r\n\r\n{\"name\":\"Dane Freelancer\",\"email\":\"freelancer@workmatch.dibbockb.com\",\"password\":\"!123QWEe\",\"role\":\"FREELANCER\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/auth/register",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/auth/logout",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"client@workmatch.dibbockb.com\",\"password\":\"!123QWEe\"}\r\n\r\n// {\"email\":\"freelancer@workmatch.dibbockb.com\",\"password\":\"!123QWEe\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/auth/login",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/auth/me",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "refresh token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/auth/refresh-token",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh-token"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "contract",
+      "item": [
+        {
+          "name": "get my contracts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/contracts",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "accept & create contract",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"jobId\": \"01a0903c-9f4e-745d-8561-311c6336d583\",\r\n  \"proposalId\":\"01a0910b-fe1a-730c-b190-aa3f6b35d021\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/contracts/accept-proposal",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                "accept-proposal"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "mark contract as complete",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"jobId\": \"01a0903c-9f4e-745d-8561-311c6336d583\",\r\n  \"proposalId\":\"01a0910b-fe1a-730c-b190-aa3f6b35d021\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/contracts/{contractId}/mark-complete",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                "{contractId}",
+                "mark-complete"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get contract details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/contracts/{contractId}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contracts",
+                "{contractId}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "admin",
+      "item": [
+        {
+          "name": "get all users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/admin/users",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get dashboard stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/admin/dashboard",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get audit logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/admin/audit-logs",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "audit-logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "block user",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/admin/users/{userId}/block",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "{userId}",
+                "block"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "unblock user",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/admin/users/{userId}/unblock",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "{userId}",
+                "unblock"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "proposal",
+      "item": [
+        {
+          "name": "get my proposal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/proposals/freelancer/my-proposals",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "proposals",
+                "freelancer",
+                "my-proposals"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get proposal details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/proposals/{proposalId}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "proposals",
+                "{proposalId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "accept counter offer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/proposals/counter-offer/{counterOfferId}/accept",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "proposals",
+                "counter-offer",
+                "{counterOfferId}",
+                "accept"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reject counter offer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/proposals/counter-offer/{counterOfferId}/reject",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "proposals",
+                "counter-offer",
+                "{counterOfferId}",
+                "reject"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "submit proposal",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"jobId\": \"{jobId}\",\r\n  \"coverLetter\": \"Hello! I'm Ahmad, a full-stack developer with 6+ years of experience building scalable web applications. I have extensive experience with React, TypeScript, and PostgreSQL.\\n\\nI have successfully delivered 25+ projects similar to this, with an average rating of 4.8/5 from clients. I'm confident I can deliver this dashboard project within 10 days and within budget.\\n\\nKey highlights:\\n✓ Expert in React & D3.js visualization\\n✓ Proven track record with real-time data applications\\n✓ Strong performance optimization skills\\n✓ Available to start immediately\\n✓ Can provide 5 references from previous clients\\n\\nI'd love to discuss this opportunity further. Looking forward to hearing from you!\",\r\n  \"approachDescription\": \"This is a test approach for this job\",\r\n  \"proposedPrice\": 500,\r\n  \"proposedTimeline\": 10,\r\n  \"portfolioLinks\": [\r\n    \"https://github.com/ahmad-freelancer/dashboard-projects\",\r\n    \"https://www.linkedin.com/in/ahmad-developer\",\r\n    \"https://ahmad-portfolio.com\"\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/proposals/",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "proposals",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create counter offer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"message\": \"Can we talk in a call?\",\r\n  \"proposedPrice\": 420,\r\n  \"proposedTimeline\": 10\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/proposals/{proposalId}/counter-offer",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "proposals",
+                "{proposalId}",
+                "counter-offer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "withdraw proposal",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/proposals/{proposalId}/withdraw",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "proposals",
+                "{proposalId}",
+                "withdraw"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get proposals by jobId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/proposals/job/01a0b03d-4e35-7084-b8ae-9c7e88d7548c",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "proposals",
+                "job",
+                "01a0b03d-4e35-7084-b8ae-9c7e88d7548c"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "review",
+      "item": [
+        {
+          "name": "get freelancer reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/review/freelancer/{freelancerId}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "review",
+                "freelancer",
+                "{freelancerId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get client reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/review/client/{clientId}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "review",
+                "client",
+                "{clientId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "post review",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"contractId\": \"contract id\",\r\n  \"rating\": 5,\r\n  \"comment\": \"Great work, delivered on time and communicated well\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/review",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "review"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "job",
+      "item": [
+        {
+          "name": "close job",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/jobs/{jobId}/close",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "{jobId}",
+                "close"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create job",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Setup WordPress Blog\",\r\n  \"description\": \"Set up a professional WordPress blog with custom theme and plugins.\\n\\nRequirements:\\n- WordPress installation & configuration\\n- Custom theme development (Tailwind CSS)\\n- SEO optimization\\n- Performance optimization\\n- Security hardening\\n- Contact form integration\\n- Newsletter subscription setup\\n- Analytics integration (Google Analytics)\\n- Backup & security plugins\\n- Documentation for maintenance\",\r\n  \"requiredSkills\": [\"WordPress\", \"PHP\", \"CSS\", \"JavaScript\", \"SEO\", \"Web hosting\"],\r\n  \"budgetMin\": 500,\r\n  \"budgetMax\": 1200,\r\n  \"deadline\": \"2027-09-30T00:00:00Z\",\r\n  \"duration\": \"1 week\",\r\n  \"experienceLevel\": \"BEGINNER\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/jobs",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete job",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/jobs/{jobId}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "{jobId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get job by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/jobs/{jobId}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "{jobId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get my jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Setup & Customize WordPress Blog\",\r\n  \"description\": \"Set up a professional WordPress blog with custom theme and plugins.\\n\\nRequirements:\\n- WordPress installation & configuration\\n- Custom theme development (Tailwind CSS)\\n- SEO optimization\\n- Performance optimization\\n- Security hardening\\n- Contact form integration\\n- Newsletter subscription setup\\n- Analytics integration (Google Analytics)\\n- Backup & security plugins\\n- Documentation for maintenance\",\r\n  \"requiredSkills\": [\"WordPress\", \"PHP\", \"CSS\", \"JavaScript\", \"SEO\", \"Web hosting\"],\r\n  \"budgetMin\": 500,\r\n  \"budgetMax\": 1200,\r\n  \"deadline\": \"2027-09-30T00:00:00Z\",\r\n  \"duration\": \"1 week\",\r\n  \"experienceLevel\": \"BEGINNER\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/jobs/my-posted",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "my-posted"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/jobs",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update job",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Setup Wordpress CMS\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/jobs/{jobId}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "{jobId}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "payment",
+      "item": [
+        {
+          "name": "get payment info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/payment/{paymentId}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment",
+                "{paymentId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "verify session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/payment/verify/{sessionId}",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment",
+                "verify",
+                "{sessionId}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "initiate payment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"contractId\": \"01a09081-a29a-747c-9e04-2eef75d84b02\",\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.workmatch.dibbockb.com/api/v1/payment/initiate",
+              "protocol": "https",
+              "host": [
+                "api",
+                "workmatch",
+                "dibbockb",
+                "com"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment",
+                "initiate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/root",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://api.workmatch.dibbockb.com",
+          "protocol": "https",
+          "host": [
+            "api",
+            "workmatch",
+            "dibbockb",
+            "com"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
