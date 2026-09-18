@@ -5,8 +5,8 @@ import { sendResponse } from "../../utils/sendResponse";
 import { IRequestUser } from "../auth/auth.interface";
 import { ProposalService } from "./proposal.service";
 import {
-    CreateProposalValidationSchema,
     CreateCounterOfferValidationSchema,
+    CreateProposalValidationSchema,
 } from "./proposal.validation";
 
 const submitProposal = catchAsync(async (req: Request, res: Response) => {

@@ -1,6 +1,6 @@
 import cron from "node-cron";
-import { prisma } from "../lib/prisma";
 import { JobStatus } from "../../generated/prisma/enums";
+import { prisma } from "../lib/prisma";
 
 export const startCronJobs = () => {
     cron.schedule("*/15 * * * *", async () => {

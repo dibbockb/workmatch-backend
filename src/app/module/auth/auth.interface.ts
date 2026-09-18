@@ -1,5 +1,5 @@
-import { UserRoles } from "../../../generated/prisma/browser"
 import { z } from "zod"
+import { UserRoles } from "../../../generated/prisma/browser"
 import { LoginValidationSchema, RegisterValidationSchema } from "./auth.validation"
 
 export type IRegisterUserPayload = z.infer<typeof RegisterValidationSchema>

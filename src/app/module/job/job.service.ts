@@ -1,11 +1,11 @@
+import httpStatus from "http-status";
 import { Prisma } from "../../../generated/prisma/client";
 import { JobStatus } from "../../../generated/prisma/enums";
 import { JobOrderByWithRelationInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
+import { AppError } from "../../utils/AppError";
 import { IJobFilters, IPaginationMeta } from "./job.interface";
 import { ICreateJobPayload, IUpdateJobPayload } from "./job.validation";
-import { AppError } from "../../utils/AppError";
-import httpStatus from "http-status";
 
 const createJob = async (payload: ICreateJobPayload, clientId: string,) => {
     const job = await prisma.job.create({

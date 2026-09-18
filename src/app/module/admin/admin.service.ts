@@ -1,8 +1,8 @@
+import httpStatus from "http-status"
 import { UserStatus } from "../../../generated/prisma/enums"
 import { prisma } from "../../lib/prisma"
-import { logAction } from "../../utils/auditlog"
 import { AppError } from "../../utils/AppError"
-import httpStatus from "http-status"
+import { logAction } from "../../utils/auditlog"
 
 const getUsers = async (page = 1, limit = 20) => {
     const users = await prisma.user.findMany({

@@ -1,4 +1,4 @@
-import { ProposalStatus, CounterOfferStatus, CounterOfferOrigin } from "../../../generated/prisma/enums";
+import { CounterOfferOrigin, CounterOfferStatus, ProposalStatus } from "../../../generated/prisma/enums";
 
 export interface IProposalFilters {
     jobId?: string;

@@ -1,10 +1,10 @@
-import { AppError } from '../utils/AppError';
-import httpStatus from "http-status";
 import { NextFunction, Request, Response } from "express";
+import httpStatus from "http-status";
 import { JwtPayload } from "jsonwebtoken";
 import { UserRoles } from "../../generated/prisma/enums";
 import config from "../envConfig";
 import { prisma } from "../lib/prisma";
+import { AppError } from '../utils/AppError';
 import { catchAsync } from "../utils/catchAsync";
 import { jwtUtils } from "../utils/jwt";
 

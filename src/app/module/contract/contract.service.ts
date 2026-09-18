@@ -1,9 +1,9 @@
+import httpStatus from "http-status"
 import { Prisma, PrismaClient } from "../../../generated/prisma/client"
 import { ContractStatus, JobStatus, ProposalStatus, UserRoles } from "../../../generated/prisma/enums"
 import { prisma } from "../../lib/prisma"
-import { logAction } from "../../utils/auditlog"
 import { AppError } from "../../utils/AppError"
-import httpStatus from "http-status"
+import { logAction } from "../../utils/auditlog"
 
 const createContract = async (jobId: string, proposalId: string, clientId: string) => {
     return await prisma.$transaction(async (tx) => {

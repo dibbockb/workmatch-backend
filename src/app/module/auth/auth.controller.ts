@@ -1,13 +1,13 @@
 import { Request, Response } from 'express'
 import httpStatus from 'http-status'
+import envConfig from '../../envConfig'
+import { uploadToCloudinary } from '../../lib/cloudinary'
 import { AppError } from '../../utils/AppError'
 import { catchAsync } from '../../utils/catchAsync'
 import { sendResponse } from '../../utils/sendResponse'
 import { CloudinaryUploadResult, IRequestUser } from './auth.interface'
 import { AuthService } from './auth.service'
 import { LoginValidationSchema, RegisterValidationSchema } from './auth.validation'
-import envConfig from '../../envConfig'
-import { uploadToCloudinary } from '../../lib/cloudinary'
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
     const validatedPayload = RegisterValidationSchema.parse(req.body)

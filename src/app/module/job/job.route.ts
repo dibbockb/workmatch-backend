@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { JobController } from "./job.controller";
-import { auth } from "../../middleware/checkAuth";
 import { UserRoles } from "../../../generated/prisma/enums";
+import { auth } from "../../middleware/checkAuth";
 import { validateRequest } from "../../middleware/validateRequest";
+import { JobController } from "./job.controller";
 import { CreateJobValidationSchema, UpdateJobValidationSchema } from "./job.validation";
 
 const router = Router()

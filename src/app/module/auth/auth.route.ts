@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { auth } from '../../middleware/checkAuth'
-import { AuthController } from './auth.controller'
 import { UserRoles } from '../../../generated/prisma/enums'
+import { auth } from '../../middleware/checkAuth'
 import { uploadMiddleware } from '../upload/upload.controller'
+import { AuthController } from './auth.controller'
 
 const router = Router()
 

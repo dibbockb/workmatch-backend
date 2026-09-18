@@ -1,9 +1,9 @@
 import httpStatus from "http-status";
-import { ZodError } from "zod";
+import jwt from 'jsonwebtoken';
 import { MulterError } from "multer";
+import { ZodError } from "zod";
 import { Prisma } from "../../generated/prisma/client";
 import { TErrorSource, TGenericErrorResponse } from "../middleware/globalErrorHandler";
-import jwt from 'jsonwebtoken';
 
 export const handleZodError = (err: ZodError): TGenericErrorResponse => {
     const errorSources: TErrorSource[] = err.issues.map((issue) => ({

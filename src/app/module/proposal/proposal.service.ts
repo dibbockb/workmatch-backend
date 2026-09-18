@@ -1,9 +1,9 @@
+import httpStatus from "http-status";
 import { Prisma } from "../../../generated/prisma/client";
 import { ContractStatus, CounterOfferOrigin, CounterOfferStatus, JobStatus, ProposalStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
-import { logAction } from "../../utils/auditlog";
 import { AppError } from "../../utils/AppError";
-import httpStatus from "http-status";
+import { logAction } from "../../utils/auditlog";
 import { IJobFilters } from "../job/job.interface";
 import { ICounterOfferResponse, IProposalFilters } from "./proposal.interface";
 import { ICreateCounterOfferPayload, ICreateProposalPayload } from "./proposal.validation";

@@ -1,18 +1,18 @@
 import bcrypt from 'bcryptjs'
+import httpStatus from "http-status"
 import { JwtPayload, SignOptions } from 'jsonwebtoken'
 import { UserRoles, UserStatus } from '../../../generated/prisma/enums'
 import config from '../../envConfig'
+import envConfig from '../../envConfig'
 import { prisma } from '../../lib/prisma'
-import { jwtUtils } from '../../utils/jwt'
 import { AppError } from '../../utils/AppError'
-import httpStatus from "http-status"
+import { jwtUtils } from '../../utils/jwt'
 import {
     ILoginUserPayload,
     IRegisterUserPayload,
     IRequestUser,
     ITokenPayload
 } from './auth.interface'
-import envConfig from '../../envConfig'
 
 
 const registerUser = async (payload: IRegisterUserPayload) => {

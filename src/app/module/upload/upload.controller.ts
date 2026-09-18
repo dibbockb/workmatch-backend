@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { catchAsync } from '../../utils/catchAsync';
-import { sendResponse } from '../../utils/sendResponse';
 import httpStatus from 'http-status';
-import { AppError } from '../../utils/AppError';
 import { uploadToCloudinary } from '../../lib/cloudinary';
 import { upload } from '../../lib/multer';
+import { AppError } from '../../utils/AppError';
+import { catchAsync } from '../../utils/catchAsync';
+import { sendResponse } from '../../utils/sendResponse';
 
 const uploadFile = catchAsync(async (req: Request, res: Response) => {
     if (!req.file) {

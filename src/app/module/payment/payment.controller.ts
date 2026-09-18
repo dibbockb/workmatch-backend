@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
-import { catchAsync } from "../../utils/catchAsync";
-import { IRequestUser } from "../auth/auth.interface";
-import { PaymentService } from "./payment.service";
-import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import Stripe from "stripe";
-import { stripe } from "../../lib/stripe";
 import envConfig from "../../envConfig";
+import { stripe } from "../../lib/stripe";
+import { catchAsync } from "../../utils/catchAsync";
+import { sendResponse } from "../../utils/sendResponse";
+import { IRequestUser } from "../auth/auth.interface";
+import { PaymentService } from "./payment.service";
 
 const initiatePayment = catchAsync(async (req: Request, res: Response) => {
     const user = req.user as IRequestUser;

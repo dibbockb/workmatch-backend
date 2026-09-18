@@ -1,12 +1,12 @@
+import httpStatus from "http-status";
 import Stripe from "stripe";
 import { Prisma, PrismaClient } from "../../../generated/prisma/client";
 import { ContractStatus, PaymentStatus } from "../../../generated/prisma/enums";
 import envConfig from "../../envConfig";
 import { prisma } from "../../lib/prisma"
 import { stripe } from "../../lib/stripe";
-import { logAction } from "../../utils/auditlog";
 import { AppError } from "../../utils/AppError";
-import httpStatus from "http-status";
+import { logAction } from "../../utils/auditlog";
 
 const initiatePayment = async (contractId: string, clientId: string) => {
     const contract = await prisma.contract.findUnique({

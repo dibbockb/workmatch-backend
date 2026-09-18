@@ -1,7 +1,7 @@
-import { UserRoles, UserStatus, JobStatus, ProposalStatus, ContractStatus, PaymentStatus, CounterOfferOrigin, CounterOfferStatus } from '../../generated/prisma/enums'
 import { PrismaPg } from '@prisma/adapter-pg'
-import envConfig from '../envConfig'
 import { PrismaClient } from '../../generated/prisma/client'
+import { ContractStatus, CounterOfferOrigin, CounterOfferStatus, JobStatus, PaymentStatus, ProposalStatus, UserRoles, UserStatus } from '../../generated/prisma/enums'
+import envConfig from '../envConfig'
 
 const connectionString = `${envConfig.database_url}`
 const adapter = new PrismaPg({ connectionString })

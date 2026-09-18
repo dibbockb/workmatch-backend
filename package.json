@@ -8,7 +8,9 @@
         "build": "tsup src/server.ts --format esm --clean --no-splitting",
         "start": "node dist/server.js",
         "test": "echo \"Error: no test specified\" && exit 1",
-        "stripe:webhook": "stripe listen --forward-to localhost:5000/api/v1/payment/webhook/stripe"
+        "stripe:webhook": "stripe listen --forward-to localhost:5000/api/v1/payment/webhook/stripe",
+        "lintcheck": "biome check src/",
+        "format": "biome check --write src/"
     },
     "keywords": [],
     "author": "",
