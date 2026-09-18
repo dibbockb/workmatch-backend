@@ -19,7 +19,7 @@ model Contract {
   deletedAt      DateTime?
 
   payments Payment[]
-  review   Review?
+  review   Review[]
 
   @@index([clientId])
   @@index([freelancerId])

@@ -42,6 +42,19 @@ const createReview = async (
 		);
 	}
 
+	const existing = await prisma.review.findUnique({
+		where: {
+			contractId_reviewerId: {
+				contractId,
+				reviewerId,
+			},
+		},
+	});
+
+	if (existing) {
+		throw new AppError(httpStatus.CONFLICT, "You already reviewed this contract");
+	}
+
 	return await prisma.$transaction(async (tx) => {
 		const review = await tx.review.create({
 			data: { contractId, reviewerId, revieweeId, rating, comment },
