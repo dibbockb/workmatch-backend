@@ -3,6 +3,7 @@ import { Prisma, PrismaClient } from "../../../generated/prisma/client";
 import {
 	ContractStatus,
 	JobStatus,
+	PaymentStatus,
 	ProposalStatus,
 	UserRoles,
 } from "../../../generated/prisma/enums";
@@ -168,6 +169,20 @@ const markAsComplete = async (contractId: string, userId: string) => {
 			throw new AppError(
 				httpStatus.CONFLICT,
 				"Only active contracts can be completed.",
+			);
+		}
+
+		const payment = await tx.payment.findFirst({
+			where: {
+				contractId,
+				status: PaymentStatus.SUCCEEDED,
+			},
+		});
+
+		if (!payment) {
+			throw new AppError(
+				httpStatus.PAYMENT_REQUIRED,
+				"Payment must be completed before marking the contract as complete"
 			);
 		}
 

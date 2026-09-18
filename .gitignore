@@ -6,6 +6,7 @@ draft.txt
 dist
 
 /src/generated
+/prisma/migrations
 
 pnpm-lock.yaml
 yarn.lock
