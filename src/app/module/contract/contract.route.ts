@@ -3,28 +3,30 @@ import { UserRoles } from "../../../generated/prisma/enums";
 import { auth } from "../../middleware/checkAuth";
 import { ContractController } from "./contract.controller";
 
-const router = Router()
+const router = Router();
 
 router.post(
-    "/accept-proposal",
-    auth(UserRoles.CLIENT),
-    ContractController.createContract
+	"/accept-proposal",
+	auth(UserRoles.CLIENT),
+	ContractController.createContract,
 );
 
-router.get("/:contractId",
-    auth(UserRoles.CLIENT, UserRoles.FREELANCER, UserRoles.ADMIN),
-    ContractController.getContract
+router.get(
+	"/:contractId",
+	auth(UserRoles.CLIENT, UserRoles.FREELANCER, UserRoles.ADMIN),
+	ContractController.getContract,
 );
 
-router.get("/",
-    auth(UserRoles.CLIENT, UserRoles.FREELANCER),
-    ContractController.getMyContracts
+router.get(
+	"/",
+	auth(UserRoles.CLIENT, UserRoles.FREELANCER),
+	ContractController.getMyContracts,
 );
 
 router.patch(
-    "/:contractId/mark-complete",
-    auth(UserRoles.CLIENT),
-    ContractController.markAsComplete
+	"/:contractId/mark-complete",
+	auth(UserRoles.CLIENT),
+	ContractController.markAsComplete,
 );
 
 export const ContractRoutes = router;

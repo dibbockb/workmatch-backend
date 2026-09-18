@@ -21,7 +21,14 @@
 			"preset": "recommended",
 			"correctness": {
 				"noUnusedVariables": "off",
-				"noUnusedFunctionParameters": "off"
+				"noUnusedFunctionParameters": "off",
+				"noUnusedImports": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "off"
+			},
+			"complexity": {
+				"useOptionalChain": "off"
 			},
 			"style": {
 				"useImportType": "off",

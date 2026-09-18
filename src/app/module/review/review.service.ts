@@ -1,92 +1,107 @@
 import httpStatus from "http-status";
 import { Prisma, PrismaClient } from "../../../generated/prisma/client";
 import { ContractStatus } from "../../../generated/prisma/enums";
-import { prisma } from "../../lib/prisma"
+import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 import { logAction } from "../../utils/auditlog";
 import { ICreateReviewPayload } from "./review.validation";
 
-const createReview = async (payload: ICreateReviewPayload, reviewerId: string) => {
-    const { contractId, rating, comment } = payload;
+const createReview = async (
+	payload: ICreateReviewPayload,
+	reviewerId: string,
+) => {
+	const { contractId, rating, comment } = payload;
 
-    const contract = await prisma.contract.findUnique({
-        where: { id: contractId },
-        select: {
-            status: true,
-            clientId: true,
-            freelancerId: true,
-        }
-    });
+	const contract = await prisma.contract.findUnique({
+		where: { id: contractId },
+		select: {
+			status: true,
+			clientId: true,
+			freelancerId: true,
+		},
+	});
 
-    if (!contract) throw new AppError(httpStatus.NOT_FOUND, "Contract not found");
-    if (contract.status !== ContractStatus.COMPLETED)
-        throw new AppError(httpStatus.CONFLICT, "Contract is not completed yet.");
+	if (!contract) throw new AppError(httpStatus.NOT_FOUND, "Contract not found");
+	if (contract.status !== ContractStatus.COMPLETED)
+		throw new AppError(httpStatus.CONFLICT, "Contract is not completed yet.");
 
-    const isReviewingFreelancer = reviewerId === contract.clientId;
+	const isReviewingFreelancer = reviewerId === contract.clientId;
 
-    const revieweeId = reviewerId === contract.clientId ? contract.freelancerId : contract.clientId;
+	const revieweeId =
+		reviewerId === contract.clientId
+			? contract.freelancerId
+			: contract.clientId;
 
-    if (reviewerId !== contract.clientId && reviewerId !== contract.freelancerId) {
-        throw new AppError(httpStatus.FORBIDDEN, "Only client or freelancer can review");
-    }
+	if (
+		reviewerId !== contract.clientId &&
+		reviewerId !== contract.freelancerId
+	) {
+		throw new AppError(
+			httpStatus.FORBIDDEN,
+			"Only client or freelancer can review",
+		);
+	}
 
-    return await prisma.$transaction(async (tx) => {
-        const review = await tx.review.create({
-            data: { contractId, reviewerId, revieweeId, rating, comment }
-        });
+	return await prisma.$transaction(async (tx) => {
+		const review = await tx.review.create({
+			data: { contractId, reviewerId, revieweeId, rating, comment },
+		});
 
-        const reviews = await tx.review.findMany({
-            where: { revieweeId }
-        });
-        const avgRating = reviews.length > 0
-            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-            : 0;
+		const reviews = await tx.review.findMany({
+			where: { revieweeId },
+		});
+		const avgRating =
+			reviews.length > 0
+				? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+				: 0;
 
-        if (isReviewingFreelancer) {
-            await tx.freelancer.update({
-                where: { userId: revieweeId },
-                data: {
-                    averageRating: new Prisma.Decimal(avgRating)
-                }
-            })
-        } else {
-            await tx.client.update({
-                where: { userId: revieweeId },
-                data: {
-                    averageRating: new Prisma.Decimal(avgRating)
-                }
-            })
-        }
+		if (isReviewingFreelancer) {
+			await tx.freelancer.update({
+				where: { userId: revieweeId },
+				data: {
+					averageRating: new Prisma.Decimal(avgRating),
+				},
+			});
+		} else {
+			await tx.client.update({
+				where: { userId: revieweeId },
+				data: {
+					averageRating: new Prisma.Decimal(avgRating),
+				},
+			});
+		}
 
+		await logAction(tx, reviewerId, "REVIEW_CREATED", "Review", review.id);
 
-        await logAction(tx, reviewerId, "REVIEW_CREATED", "Review", review.id);
-
-        return review;
-    });
+		return review;
+	});
 };
 
 const getFreelancerReviews = async (freelancerId: string) => {
-    const freelancer = await prisma.freelancer.findUnique({ where: { id: freelancerId } })
-    if (!freelancer) throw new AppError(httpStatus.NOT_FOUND, `Invalid freelancer ID`)
+	const freelancer = await prisma.freelancer.findUnique({
+		where: { id: freelancerId },
+	});
+	if (!freelancer)
+		throw new AppError(httpStatus.NOT_FOUND, `Invalid freelancer ID`);
 
-    return await prisma.review.findMany({
-        where: { revieweeId: freelancer.userId },
-        include: { reviewer: { omit: { password: true } } }
-    });
+	return await prisma.review.findMany({
+		where: { revieweeId: freelancer.userId },
+		include: { reviewer: { omit: { password: true } } },
+	});
 };
 
 const getClientReviews = async (clientId: string) => {
-    const client = await prisma.client.findUnique({ where: { id: clientId } })
-    if (!client) throw new AppError(httpStatus.NOT_FOUND, `Invalid Client ID`)
+	const client = await prisma.client.findUnique({ where: { id: clientId } });
+	if (!client) throw new AppError(httpStatus.NOT_FOUND, `Invalid Client ID`);
 
-    return await prisma.review.findMany({
-        where: { revieweeId: client.userId },
-        include: { reviewer: { omit: { password: true } } }
-    });
+	return await prisma.review.findMany({
+		where: { revieweeId: client.userId },
+		include: { reviewer: { omit: { password: true } } },
+	});
 };
 
 export const ReviewService = {
-    createReview,
-    getFreelancerReviews,
-    getClientReviews
-}
+	createReview,
+	getFreelancerReviews,
+	getClientReviews,
+};

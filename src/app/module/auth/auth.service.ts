@@ -1,213 +1,218 @@
-import bcrypt from 'bcryptjs'
-import httpStatus from "http-status"
-import { JwtPayload, SignOptions } from 'jsonwebtoken'
-import { UserRoles, UserStatus } from '../../../generated/prisma/enums'
-import config from '../../envConfig'
-import envConfig from '../../envConfig'
-import { prisma } from '../../lib/prisma'
-import { AppError } from '../../utils/AppError'
-import { jwtUtils } from '../../utils/jwt'
+import bcrypt from "bcryptjs";
+import httpStatus from "http-status";
+import { JwtPayload, SignOptions } from "jsonwebtoken";
+import { UserRoles, UserStatus } from "../../../generated/prisma/enums";
+import config from "../../envConfig";
+import envConfig from "../../envConfig";
+import { prisma } from "../../lib/prisma";
+import { AppError } from "../../utils/AppError";
+import { jwtUtils } from "../../utils/jwt";
 import {
-    ILoginUserPayload,
-    IRegisterUserPayload,
-    IRequestUser,
-    ITokenPayload
-} from './auth.interface'
-
+	ILoginUserPayload,
+	IRegisterUserPayload,
+	IRequestUser,
+	ITokenPayload,
+} from "./auth.interface";
 
 const registerUser = async (payload: IRegisterUserPayload) => {
-    const { name, email, password, role, companyName, profileImageUrl } = payload
-    const normalizedEmail = email.trim().toLocaleLowerCase()
+	const { name, email, password, role, companyName, profileImageUrl } = payload;
+	const normalizedEmail = email.trim().toLocaleLowerCase();
 
-    const isUserExists = await prisma.user.findUnique({
-        where: { email: normalizedEmail },
-    })
+	const isUserExists = await prisma.user.findUnique({
+		where: { email: normalizedEmail },
+	});
 
-    if (isUserExists) {
-        throw new AppError(httpStatus.CONFLICT, 'User with this email already exists')
-    }
+	if (isUserExists) {
+		throw new AppError(
+			httpStatus.CONFLICT,
+			"User with this email already exists",
+		);
+	}
 
-    const hashedPassword = await bcrypt.hash(password, Number(envConfig.bcrypt_salt_rounds))
+	const hashedPassword = await bcrypt.hash(
+		password,
+		Number(envConfig.bcrypt_salt_rounds),
+	);
 
-    const createdUser = await prisma.$transaction(async (tx) => {
-        const user = await tx.user.create({
-            data: {
-                name,
-                email: normalizedEmail,
-                password: hashedPassword,
-                role: role as UserRoles,
-                status: UserStatus.ACTIVE,
-                profileImageUrl,
-                emailVerified: false,
-            },
-            omit: { password: true },
-        })
+	const createdUser = await prisma.$transaction(async (tx) => {
+		const user = await tx.user.create({
+			data: {
+				name,
+				email: normalizedEmail,
+				password: hashedPassword,
+				role: role as UserRoles,
+				status: UserStatus.ACTIVE,
+				profileImageUrl,
+				emailVerified: false,
+			},
+			omit: { password: true },
+		});
 
-        if (role === UserRoles.FREELANCER) {
-            await tx.freelancer.create({
-                data: {
-                    userId: user.id,
-                    bio: '',
-                    skills: [],
-                    hourlyRate: 0,
-                    portfolioUrl: null,
-                }
-            })
-        }
+		if (role === UserRoles.FREELANCER) {
+			await tx.freelancer.create({
+				data: {
+					userId: user.id,
+					bio: "",
+					skills: [],
+					hourlyRate: 0,
+					portfolioUrl: null,
+				},
+			});
+		} else if (role === UserRoles.CLIENT) {
+			await tx.client.create({
+				data: {
+					userId: user.id,
+					companyName: companyName || name,
+					bio: "",
+					totalSpent: 0,
+					postedJobs: 0,
+					averageRating: 0,
+				},
+			});
+		}
+		return user;
+	});
 
-        else if (role === UserRoles.CLIENT) {
-            await tx.client.create({
-                data: {
-                    userId: user.id,
-                    companyName: companyName || name,
-                    bio: '',
-                    totalSpent: 0,
-                    postedJobs: 0,
-                    averageRating: 0,
-                }
-            })
-        }
-        return user;
-    })
+	const tokenPayload: ITokenPayload = {
+		userId: createdUser.id,
+		name: createdUser.name,
+		email: createdUser.email,
+		role: createdUser.role as UserRoles,
+	};
 
-    const tokenPayload: ITokenPayload = {
-        userId: createdUser.id,
-        name: createdUser.name,
-        email: createdUser.email,
-        role: createdUser.role as UserRoles
-    }
+	const accessToken = jwtUtils.createToken(
+		tokenPayload,
+		config.jwt_access_secret,
+		config.jwt_access_expires_in as SignOptions,
+	);
 
-    const accessToken = jwtUtils.createToken(
-        tokenPayload,
-        config.jwt_access_secret,
-        config.jwt_access_expires_in as SignOptions
-    );
+	const refreshToken = jwtUtils.createToken(
+		tokenPayload,
+		config.jwt_refresh_secret,
+		config.jwt_refresh_expires_in as SignOptions,
+	);
 
-    const refreshToken = jwtUtils.createToken(
-        tokenPayload,
-        config.jwt_refresh_secret,
-        config.jwt_refresh_expires_in as SignOptions
-    );
-
-    return {
-        user: createdUser,
-        accessToken,
-        refreshToken
-    }
-}
+	return {
+		user: createdUser,
+		accessToken,
+		refreshToken,
+	};
+};
 
 const loginUser = async (payload: ILoginUserPayload) => {
-    const { password } = payload
-    const email = payload.email.trim().toLowerCase()
+	const { password } = payload;
+	const email = payload.email.trim().toLowerCase();
 
-    const user = await prisma.user.findUnique({
-        where: { email },
-    })
+	const user = await prisma.user.findUnique({
+		where: { email },
+	});
 
-    if (!user) {
-        throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid Credentials')
-    }
+	if (!user) {
+		throw new AppError(httpStatus.UNAUTHORIZED, "Invalid Credentials");
+	}
 
-    if (user.status === UserStatus.BLOCKED) {
-        throw new AppError(httpStatus.FORBIDDEN, 'Your account is blocked')
-    }
+	if (user.status === UserStatus.BLOCKED) {
+		throw new AppError(httpStatus.FORBIDDEN, "Your account is blocked");
+	}
 
-    if (user.isDeleted || user.status === UserStatus.DELETED) {
-        throw new AppError(httpStatus.NOT_FOUND, 'User Account not found')
-    }
+	if (user.isDeleted || user.status === UserStatus.DELETED) {
+		throw new AppError(httpStatus.NOT_FOUND, "User Account not found");
+	}
 
-    const isPasswordMatched = await bcrypt.compare(password, user.password)
+	const isPasswordMatched = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordMatched) {
-        throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid credentials')
-    }
+	if (!isPasswordMatched) {
+		throw new AppError(httpStatus.UNAUTHORIZED, "Invalid credentials");
+	}
 
-    const tokenPayload: ITokenPayload = {
-        userId: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role as UserRoles,
-    }
+	const tokenPayload: ITokenPayload = {
+		userId: user.id,
+		name: user.name,
+		email: user.email,
+		role: user.role as UserRoles,
+	};
 
-    const accessToken = jwtUtils.createToken(
-        tokenPayload,
-        config.jwt_access_secret,
-        config.jwt_access_expires_in as SignOptions
-    );
+	const accessToken = jwtUtils.createToken(
+		tokenPayload,
+		config.jwt_access_secret,
+		config.jwt_access_expires_in as SignOptions,
+	);
 
-    const refreshToken = jwtUtils.createToken(
-        tokenPayload,
-        config.jwt_refresh_secret,
-        config.jwt_refresh_expires_in as SignOptions
-    );
+	const refreshToken = jwtUtils.createToken(
+		tokenPayload,
+		config.jwt_refresh_secret,
+		config.jwt_refresh_expires_in as SignOptions,
+	);
 
-    return {
-        accessToken,
-        refreshToken
-    }
-}
+	return {
+		accessToken,
+		refreshToken,
+	};
+};
 
 const getMe = async (user: IRequestUser) => {
-    const isUserExists = await prisma.user.findUnique({
-        where: {
-            id: user.userId,
-        },
-        omit: {
-            password: true,
-        },
-        include: {
-            freelancer: true,
-            client: true,
-        },
-    })
+	const isUserExists = await prisma.user.findUnique({
+		where: {
+			id: user.userId,
+		},
+		omit: {
+			password: true,
+		},
+		include: {
+			freelancer: true,
+			client: true,
+		},
+	});
 
-    if (!isUserExists) {
-        throw new AppError(httpStatus.NOT_FOUND, 'User not found')
-    }
+	if (!isUserExists) {
+		throw new AppError(httpStatus.NOT_FOUND, "User not found");
+	}
 
-    return isUserExists
-}
+	return isUserExists;
+};
 
 const refreshTokenHandler = async (token: string) => {
+	const data = jwtUtils.verifyToken(
+		token,
+		config.jwt_refresh_secret,
+	) as JwtPayload;
 
-    const data = jwtUtils.verifyToken(token, config.jwt_refresh_secret) as JwtPayload
+	const user = await prisma.user.findUnique({
+		where: { id: data.userId },
+	});
 
-    const user = await prisma.user.findUnique({
-        where: { id: data.userId },
-    })
+	if (!user || user.isDeleted || user.status !== UserStatus.ACTIVE) {
+		throw new AppError(httpStatus.NOT_FOUND, "User is inactive or not found");
+	}
 
-    if (!user || user.isDeleted || user.status !== UserStatus.ACTIVE) {
-        throw new AppError(httpStatus.NOT_FOUND, 'User is inactive or not found')
-    }
+	const tokenPayload = {
+		userId: user.id,
+		name: user.name,
+		email: user.email,
+		role: user.role as UserRoles,
+	};
 
-    const tokenPayload = {
-        userId: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role as UserRoles
-    }
+	const accessToken = jwtUtils.createToken(
+		tokenPayload,
+		config.jwt_access_secret,
+		config.jwt_access_expires_in as SignOptions,
+	);
 
-    const accessToken = jwtUtils.createToken(
-        tokenPayload,
-        config.jwt_access_secret,
-        config.jwt_access_expires_in as SignOptions
-    );
+	const refreshToken = jwtUtils.createToken(
+		tokenPayload,
+		config.jwt_refresh_secret,
+		config.jwt_refresh_expires_in as SignOptions,
+	);
 
-    const refreshToken = jwtUtils.createToken(
-        tokenPayload,
-        config.jwt_refresh_secret,
-        config.jwt_refresh_expires_in as SignOptions
-    );
-
-    return {
-        accessToken,
-        refreshToken
-    }
-}
+	return {
+		accessToken,
+		refreshToken,
+	};
+};
 
 export const AuthService = {
-    registerUser,
-    loginUser,
-    getMe,
-    refreshTokenHandler
-}
+	registerUser,
+	loginUser,
+	getMe,
+	refreshTokenHandler,
+};

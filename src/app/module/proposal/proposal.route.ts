@@ -6,47 +6,47 @@ import { ProposalController } from "./proposal.controller";
 const router = Router();
 
 router.get(
-    "/freelancer/my-proposals",
-    auth(UserRoles.FREELANCER),
-    ProposalController.getFreelancerProposals
+	"/freelancer/my-proposals",
+	auth(UserRoles.FREELANCER),
+	ProposalController.getFreelancerProposals,
 );
 
-router.get("/job/:jobId",
-    auth(UserRoles.CLIENT),
-    ProposalController.getProposalsForJob
+router.get(
+	"/job/:jobId",
+	auth(UserRoles.CLIENT),
+	ProposalController.getProposalsForJob,
 );
 
-router.get("/:proposalId",
-    auth(UserRoles.CLIENT, UserRoles.FREELANCER),
-    ProposalController.getProposalById
+router.get(
+	"/:proposalId",
+	auth(UserRoles.CLIENT, UserRoles.FREELANCER),
+	ProposalController.getProposalById,
 );
 
-router.post("/", auth(UserRoles.FREELANCER),
-    ProposalController.submitProposal
+router.post("/", auth(UserRoles.FREELANCER), ProposalController.submitProposal);
+
+router.post(
+	"/:proposalId/withdraw",
+	auth(UserRoles.FREELANCER),
+	ProposalController.withdrawProposal,
 );
 
 router.post(
-    "/:proposalId/withdraw",
-    auth(UserRoles.FREELANCER),
-    ProposalController.withdrawProposal
+	"/:proposalId/counter-offer",
+	auth(UserRoles.CLIENT),
+	ProposalController.createCounterOffer,
 );
 
 router.post(
-    "/:proposalId/counter-offer",
-    auth(UserRoles.CLIENT),
-    ProposalController.createCounterOffer
+	"/counter-offer/:counterOfferId/accept",
+	auth(UserRoles.FREELANCER),
+	ProposalController.acceptCounterOffer,
 );
 
 router.post(
-    "/counter-offer/:counterOfferId/accept",
-    auth(UserRoles.FREELANCER),
-    ProposalController.acceptCounterOffer
-);
-
-router.post(
-    "/counter-offer/:counterOfferId/reject",
-    auth(UserRoles.FREELANCER),
-    ProposalController.rejectCounterOffer
+	"/counter-offer/:counterOfferId/reject",
+	auth(UserRoles.FREELANCER),
+	ProposalController.rejectCounterOffer,
 );
 
 export const ProposalRoutes = router;

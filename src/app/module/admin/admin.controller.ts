@@ -1,74 +1,72 @@
 import { Request, Response } from "express";
-import httpStatus from 'http-status'
-import { catchAsync } from "../../utils/catchAsync"
+import httpStatus from "http-status";
+import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
-import { AdminService } from "./admin.service"
+import { AdminService } from "./admin.service";
 
 const getUsers = catchAsync(async (req: Request, res: Response) => {
-    const result = await AdminService.getUsers();
+	const result = await AdminService.getUsers();
 
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Users fetched successfully",
-        data: result
-    })
-})
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Users fetched successfully",
+		data: result,
+	});
+});
 
 const blockUser = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.params.userId;
-    const reason = req.body;
-    const blocked = await AdminService.blockUser(userId as string, reason)
+	const userId = req.params.userId;
+	const reason = req.body;
+	const blocked = await AdminService.blockUser(userId as string, reason);
 
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Users blocked successfully",
-        data: blocked
-    })
-})
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Users blocked successfully",
+		data: blocked,
+	});
+});
 
 const unblockUser = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.params.userId;
-    const reason = req.body;
-    const unblocked = await AdminService.unblockUser(userId as string, reason)
+	const userId = req.params.userId;
+	const reason = req.body;
+	const unblocked = await AdminService.unblockUser(userId as string, reason);
 
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Users unblocked successfully",
-        data: unblocked
-    })
-})
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Users unblocked successfully",
+		data: unblocked,
+	});
+});
 
 const getDashboard = catchAsync(async (req: Request, res: Response) => {
-    const stats = await AdminService.getDashboard()
+	const stats = await AdminService.getDashboard();
 
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Dashboard stats fetched successfully.",
-        data: stats
-    })
-})
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Dashboard stats fetched successfully.",
+		data: stats,
+	});
+});
 
 const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
-    const stats = await AdminService.getAuditLogs()
+	const stats = await AdminService.getAuditLogs();
 
-    sendResponse(res, {
-        statusCode: httpStatus.OK,
-        success: true,
-        message: "Audit logs fetched successfully.",
-        data: stats
-    })
-})
-
-
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Audit logs fetched successfully.",
+		data: stats,
+	});
+});
 
 export const AdminController = {
-    getUsers,
-    blockUser,
-    unblockUser,
-    getDashboard,
-    getAuditLogs
-}
+	getUsers,
+	blockUser,
+	unblockUser,
+	getDashboard,
+	getAuditLogs,
+};

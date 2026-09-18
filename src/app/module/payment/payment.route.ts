@@ -6,12 +6,20 @@ import { PaymentController } from "./payment.controller";
 const router = Router();
 
 router.post(
-    "/initiate",
-    auth(UserRoles.CLIENT),
-    PaymentController.initiatePayment
+	"/initiate",
+	auth(UserRoles.CLIENT),
+	PaymentController.initiatePayment,
 );
 
-router.get("/verify/:sessionId", auth(UserRoles.ADMIN), PaymentController.verifySession)
-router.get("/:paymentId", auth(UserRoles.ADMIN, UserRoles.CLIENT, UserRoles.FREELANCER), PaymentController.getPayment);
+router.get(
+	"/verify/:sessionId",
+	auth(UserRoles.ADMIN),
+	PaymentController.verifySession,
+);
+router.get(
+	"/:paymentId",
+	auth(UserRoles.ADMIN, UserRoles.CLIENT, UserRoles.FREELANCER),
+	PaymentController.getPayment,
+);
 
 export const PaymentRoutes = router;
