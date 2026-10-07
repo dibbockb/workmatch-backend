@@ -51,7 +51,7 @@ const getJobsList = catchAsync(async (req: Request, res: Response) => {
 		search: q as string | undefined,
 		sortBy: (sortBy as any) || "createdAt",
 		page: page ? Number(page) : 1,
-		limit: limit ? Number(limit) : 20,
+		limit: limit ? Number(limit) : 10,
 	};
 
 	const result = await JobService.getJobsList(filters as IJobFilters);

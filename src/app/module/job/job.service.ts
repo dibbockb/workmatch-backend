@@ -85,10 +85,19 @@ const getJobsList = async (filters: IJobFilters) => {
 		search,
 		sortBy = "createdAt",
 		page = 1,
-		limit = 20,
 	} = filters;
 
-	const skip = (page - 1) * limit;
+	const parsedPage = Number(page) || 1;
+	const parsedLimit = Number(filters.limit) || 10;
+
+	const skip = (parsedPage - 1) * parsedLimit;
+
+	const parsedBudgetMin = budgetMin !== undefined ? Number(budgetMin) : undefined;
+	const parsedBudgetMax = budgetMax !== undefined ? Number(budgetMax) : undefined;
+
+	const parsedSkills = typeof skills === "string"
+		? (skills as string).split(",").map((s) => s.trim()).filter(Boolean)
+		: skills;
 
 	const where: Prisma.JobWhereInput = {
 		status,
@@ -98,64 +107,67 @@ const getJobsList = async (filters: IJobFilters) => {
 		},
 	};
 
-	if (skills && skills.length > 0) {
+	if (parsedSkills && parsedSkills.length > 0) {
 		where.requiredSkills = {
-			hasSome: skills,
+			hasSome: parsedSkills,
 		};
 	}
 
-	if (budgetMin) {
+	if (parsedBudgetMin !== undefined && !Number.isNaN(parsedBudgetMin)) {
 		where.budgetMax = {
-			gte: budgetMin,
+			gte: parsedBudgetMin,
 		};
 	}
-	if (budgetMax) {
+	if (parsedBudgetMax !== undefined && !Number.isNaN(parsedBudgetMax)) {
 		where.budgetMin = {
-			lte: budgetMax,
+			lte: parsedBudgetMax,
 		};
 	}
+
 	if (search && search.trim()) {
+		const sanitizedSearch = search.trim();
 		where.OR = [
-			{ title: { contains: search, mode: "insensitive" } },
-			{ description: { contains: search, mode: "insensitive" } },
+			{ title: { contains: sanitizedSearch, mode: "insensitive" } },
+			{ description: { contains: sanitizedSearch, mode: "insensitive" } },
 		];
 	}
 
-	let orderBy: JobOrderByWithRelationInput = { createdAt: "desc" };
+	let orderBy: Prisma.JobOrderByWithRelationInput = { createdAt: "desc" };
 	if (sortBy === "deadline") {
 		orderBy = { deadline: "asc" };
 	} else if (sortBy === "budgetMax") {
 		orderBy = { budgetMax: "desc" };
 	}
 
-	const total = await prisma.job.count({ where });
-
-	const jobs = await prisma.job.findMany({
-		where,
-		skip,
-		take: limit,
-		orderBy,
-		include: {
-			client: {
-				select: {
-					id: true,
-					name: true,
-					profileImageUrl: true,
+	const [total, jobs] = await Promise.all([
+		prisma.job.count({ where }),
+		prisma.job.findMany({
+			where,
+			skip,
+			take: parsedLimit,
+			orderBy,
+			include: {
+				client: {
+					select: {
+						id: true,
+						name: true,
+						profileImageUrl: true,
+					},
 				},
 			},
-		},
-	});
+		}),
+	]);
 
-	const pagination: IPaginationMeta = {
-		page,
-		limit,
-		total,
-		totalPages: Math.ceil(total / limit),
-	};
+	const totalPages = total > 0 ? Math.ceil(total / parsedLimit) : 0;
 
 	return {
 		jobs,
-		pagination,
+		pagination: {
+			page: parsedPage,
+			limit: parsedLimit,
+			total,
+			totalPages,
+		},
 	};
 };
 
