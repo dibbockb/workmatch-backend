@@ -273,6 +273,37 @@ const withdrawProposal = async (proposalId: string, freelancerId: string) => {
 	return withdrawn;
 };
 
+const rejectProposal = async (proposalId: string, clientId: string) => {
+	const proposal = await prisma.proposal.findUnique({
+		where: { id: proposalId },
+		include: { job: true },
+	});
+
+	if (!proposal) {
+		throw new AppError(httpStatus.NOT_FOUND, `Proposal not found.`);
+	}
+	if (proposal.job.clientId !== clientId) {
+		throw new AppError(
+			httpStatus.FORBIDDEN,
+			`You do not have permission to reject this proposal.`,
+		);
+	}
+	if (proposal.status !== ProposalStatus.PENDING) {
+		throw new AppError(
+			httpStatus.CONFLICT,
+			`Only pending proposals can be rejected.`,
+		);
+	}
+
+	const rejected = await prisma.proposal.update({
+		where: { id: proposalId },
+		data: {
+			status: ProposalStatus.REJECTED,
+		},
+	});
+	return rejected;
+};
+
 const createCounterOffer = async (
 	proposalId: string,
 	clientId: string,
@@ -473,6 +504,7 @@ export const ProposalService = {
 	getProposalById,
 	getFreelancerProposals,
 	withdrawProposal,
+	rejectProposal,
 	createCounterOffer,
 	acceptCounterOffer,
 	rejectCounterOffer,

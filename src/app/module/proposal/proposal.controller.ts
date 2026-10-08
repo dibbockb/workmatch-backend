@@ -108,6 +108,23 @@ const withdrawProposal = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const rejectProposal = catchAsync(async (req: Request, res: Response) => {
+	const user = req.user as IRequestUser;
+	const { proposalId } = req.params;
+
+	const result = await ProposalService.rejectProposal(
+		proposalId as string,
+		user.userId,
+	);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Proposal rejected successfully",
+		data: result,
+	});
+});
+
 const createCounterOffer = catchAsync(async (req: Request, res: Response) => {
 	const user = req.user as IRequestUser;
 	const { proposalId } = req.params;
@@ -167,6 +184,7 @@ export const ProposalController = {
 	getProposalById,
 	getFreelancerProposals,
 	withdrawProposal,
+	rejectProposal,
 	createCounterOffer,
 	acceptCounterOffer,
 	rejectCounterOffer,

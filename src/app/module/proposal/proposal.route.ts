@@ -30,6 +30,11 @@ router.post(
 	auth(UserRoles.FREELANCER),
 	ProposalController.withdrawProposal,
 );
+router.post(
+	"/:proposalId/reject",
+	auth(UserRoles.CLIENT),
+	ProposalController.rejectProposal,
+);
 
 router.post(
 	"/:proposalId/counter-offer",
