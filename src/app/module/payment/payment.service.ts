@@ -1,7 +1,12 @@
 import httpStatus from "http-status";
 import Stripe from "stripe";
 import { Prisma, PrismaClient } from "../../../generated/prisma/client";
-import { ContractStatus, PaymentStatus } from "../../../generated/prisma/enums";
+import {
+	ContractStatus,
+	JobStatus,
+	PaymentStatus,
+	ProposalStatus,
+} from "../../../generated/prisma/enums";
 import envConfig from "../../envConfig";
 import { prisma } from "../../lib/prisma";
 import { stripe } from "../../lib/stripe";
@@ -9,6 +14,8 @@ import { AppError } from "../../utils/AppError";
 import { logAction } from "../../utils/auditlog";
 
 const initiatePayment = async (contractId: string, clientId: string) => {
+	// unchanged — leaving as-is, no longer used by the accept-proposal flow
+	// but harmless to keep around
 	const contract = await prisma.contract.findUnique({
 		where: { id: contractId },
 		include: {
@@ -115,6 +122,114 @@ const handleWebhook = async (event: Stripe.Event) => {
 			case "checkout.session.completed": {
 				const session = event.data.object as Stripe.Checkout.Session;
 
+				if (session.metadata?.type === "proposal_acceptance") {
+					const {
+						jobId,
+						proposalId,
+						clientId,
+						freelancerId,
+						agreedPrice,
+						agreedTimeline,
+					} = session.metadata as Record<string, string>;
+
+					const proposal = await tx.proposal.findUnique({
+						where: { id: proposalId },
+						include: { job: true },
+					});
+
+					const stillValid =
+						proposal &&
+						proposal.status === ProposalStatus.PENDING &&
+						proposal.job.status === JobStatus.OPEN &&
+						proposal.job.deadline > new Date();
+
+					if (!stillValid) {
+						if (session.payment_intent) {
+							await stripe.refunds.create({
+								payment_intent: session.payment_intent as string,
+							});
+						}
+						await logAction(
+							tx,
+							clientId,
+							"PAYMENT_REFUNDED_INVALID_PROPOSAL",
+							"Proposal",
+							proposalId,
+						);
+						return;
+					}
+
+					await tx.proposal.updateMany({
+						where: { jobId, id: { not: proposalId } },
+						data: { status: ProposalStatus.REJECTED },
+					});
+					await tx.proposal.update({
+						where: { id: proposalId },
+						data: { status: ProposalStatus.ACCEPTED },
+					});
+
+					const contract = await tx.contract.create({
+						data: {
+							jobId,
+							proposalId,
+							clientId,
+							freelancerId,
+							agreedPrice: new Prisma.Decimal(agreedPrice),
+							agreedTimeline: Number(agreedTimeline),
+							status: ContractStatus.ACTIVE,
+						},
+					});
+
+					await tx.job.update({
+						where: { id: jobId },
+						data: { status: JobStatus.IN_PROGRESS },
+					});
+
+					const amount = Number(agreedPrice);
+					const platformCommission = Math.round(amount * 0.1 * 100) / 100;
+					const freelancerEarns = amount - platformCommission;
+
+					await tx.payment.create({
+						data: {
+							contractId: contract.id,
+							clientId,
+							freelancerId,
+							amount: new Prisma.Decimal(amount),
+							platformCommission: new Prisma.Decimal(platformCommission),
+							freelancerEarns: new Prisma.Decimal(freelancerEarns),
+							status: PaymentStatus.SUCCEEDED,
+							stripeSessionId: session.id,
+						},
+					});
+
+					await tx.freelancer.update({
+						where: { userId: freelancerId },
+						data: { totalEarnings: { increment: freelancerEarns } },
+					});
+
+					await tx.client.update({
+						where: { userId: clientId },
+						data: { totalSpent: { increment: amount } },
+					});
+
+					await logAction(
+						tx,
+						clientId,
+						"CONTRACT_ACCEPTED",
+						"CONTRACT",
+						contract.id,
+					);
+					await logAction(
+						tx,
+						clientId,
+						"PAYMENT_SUCCEEDED",
+						"Payment",
+						contract.id,
+					);
+
+					return;
+				}
+
 				const payment = await tx.payment.findUnique({
 					where: { stripeSessionId: session.id },
 				});
@@ -164,6 +279,10 @@ const handleWebhook = async (event: Stripe.Event) => {
 
 			case "checkout.session.expired": {
 				const session = event.data.object as Stripe.Checkout.Session;
+
+				if (session.metadata?.type === "proposal_acceptance") {
+					return;
+				}
 
 				await tx.payment.updateMany({
 					where: { stripeSessionId: session.id, status: PaymentStatus.PENDING },

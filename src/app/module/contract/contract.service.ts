@@ -10,6 +10,8 @@ import {
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 import { logAction } from "../../utils/auditlog";
+import envConfig from "../../envConfig";
+import { stripe } from "../../lib/stripe";
 
 const createContract = async (
 	jobId: string,
@@ -17,10 +19,7 @@ const createContract = async (
 	clientId: string,
 ) => {
 	return await prisma.$transaction(async (tx) => {
-		const proposal = await tx.proposal.findUnique({
-			where: { id: proposalId },
-			include: { job: true },
-		});
+		const proposal = await prisma.proposal.findUnique({ where: { id: proposalId }, include: { job: true } });
 
 		if (!proposal) {
 			throw new AppError(httpStatus.NOT_FOUND, `Proposal Not Found`);
@@ -47,49 +46,31 @@ const createContract = async (
 			throw new AppError(httpStatus.CONFLICT, "The job deadline has passed.");
 		}
 
-		await tx.proposal.updateMany({
-			where: {
-				jobId,
-				id: { not: proposalId },
-			},
-			data: {
-				status: ProposalStatus.REJECTED,
-			},
-		});
-
-		await tx.proposal.update({
-			where: { id: proposalId },
-			data: {
-				status: ProposalStatus.ACCEPTED,
-			},
-		});
-
-		const contract = await tx.contract.create({
-			data: {
+		const session = await stripe.checkout.sessions.create({
+			payment_method_types: ["card"],
+			line_items: [{
+				price_data: {
+					currency: "usd",
+					product_data: { name: `Contract Payment: ${proposal.job.title}` },
+					unit_amount: Math.round(Number(proposal.proposedPrice) * 100),
+				},
+				quantity: 1,
+			}],
+			mode: "payment",
+			success_url: `${envConfig.client_url}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+			cancel_url: `${envConfig.client_url}/payment/cancel`,
+			metadata: {
+				type: "proposal_acceptance",
 				jobId,
 				proposalId,
 				clientId,
 				freelancerId: proposal.freelancerId,
-				agreedPrice: proposal.proposedPrice,
-				agreedTimeline: proposal.proposedTimeline,
-				status: ContractStatus.ACTIVE,
-			},
-			include: {
-				job: true,
-				proposal: true,
-				client: { omit: { password: true } },
-				freelancer: { omit: { password: true } },
+				agreedPrice: proposal.proposedPrice.toString(),
+				agreedTimeline: proposal.proposedTimeline.toString(),
 			},
 		});
 
-		await logAction(tx, clientId, "CONTRACT_ACCEPTED", "CONTRACT", contract.id);
-
-		await tx.job.update({
-			where: { id: jobId },
-			data: { status: JobStatus.IN_PROGRESS },
-		});
-
-		return contract;
+		return { checkoutUrl: session.url };
 	});
 };
 

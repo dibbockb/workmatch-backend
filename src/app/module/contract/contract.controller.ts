@@ -18,7 +18,7 @@ const createContract = catchAsync(async (req: Request, res: Response) => {
 	sendResponse(res, {
 		statusCode: httpStatus.CREATED,
 		success: true,
-		message: "Proposal accepted and contract created",
+		message: "Initialized Stripe Checkout for Contract Creation",
 		data: result,
 	});
 });
