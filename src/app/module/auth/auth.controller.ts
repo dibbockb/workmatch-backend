@@ -20,6 +20,11 @@ const authCookieOptions = (maxAge: number) => ({
 	sameSite: (isProd ? "none" : "lax") as "none" | "lax",
 	maxAge,
 	path: "/",
+	// Share cookies with the frontend on the parent domain
+	// (api.X + app on X) so Next.js middleware can read the session.
+	...(envConfig.cookie_domain
+		? { domain: envConfig.cookie_domain }
+		: {}),
 });
 
 const ACCESS_COOKIE_AGE = 1000 * 60 * 60 * 24; // 24 hours

@@ -14,8 +14,6 @@ import { AppError } from "../../utils/AppError";
 import { logAction } from "../../utils/auditlog";
 
 const initiatePayment = async (contractId: string, clientId: string) => {
-	// unchanged — leaving as-is, no longer used by the accept-proposal flow
-	// but harmless to keep around
 	const contract = await prisma.contract.findUnique({
 		where: { id: contractId },
 		include: {
@@ -122,6 +120,7 @@ const handleWebhook = async (event: Stripe.Event) => {
 			case "checkout.session.completed": {
 				const session = event.data.object as Stripe.Checkout.Session;
 
+				//proposal.accept
 				if (session.metadata?.type === "proposal_acceptance") {
 					const {
 						jobId,

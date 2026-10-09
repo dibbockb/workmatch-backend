@@ -28,7 +28,11 @@ app.post(
 
 app.use(
 	cors({
-		origin: config.client_url,
+		// Production frontend plus local dev, so localhost can talk to
+		// either backend without tripping preflights.
+		origin: [config.client_url, "http://localhost:3000"].filter(
+			(o): o is string => typeof o === "string" && o.length > 0,
+		),
 		credentials: true,
 	}),
 );
