@@ -12,6 +12,19 @@ import {
 	RegisterValidationSchema,
 } from "./auth.validation";
 
+const isProd = envConfig.node_env === "production";
+
+const authCookieOptions = (maxAge: number) => ({
+	httpOnly: true,
+	secure: isProd,
+	sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+	maxAge,
+	path: "/",
+});
+
+const ACCESS_COOKIE_AGE = 1000 * 60 * 60 * 24; // 24 hours
+const REFRESH_COOKIE_AGE = 1000 * 60 * 60 * 24 * 7; // 7 days
+
 const registerUser = catchAsync(async (req: Request, res: Response) => {
 	const validatedPayload = RegisterValidationSchema.parse(req.body);
 	let profileImageUrl: string | undefined;
@@ -33,18 +46,17 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
 
 	const { accessToken, refreshToken, user } = result;
 
-	res.cookie("accessToken", accessToken, {
-		httpOnly: true,
-		secure: envConfig.node_env === "production",
-		sameSite: "lax",
-		maxAge: 1000 * 60 * 60 * 24, // 24 hour
-	});
-	res.cookie("refreshToken", refreshToken, {
-		httpOnly: true,
-		secure: envConfig.node_env === "production",
-		sameSite: "lax",
-		maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-	});
+	res.cookie(
+		"accessToken",
+		accessToken,
+		authCookieOptions(ACCESS_COOKIE_AGE)
+	);
+
+	res.cookie(
+		"refreshToken",
+		refreshToken,
+		authCookieOptions(REFRESH_COOKIE_AGE),
+	);
 
 	sendResponse(res, {
 		statusCode: httpStatus.CREATED,
@@ -63,18 +75,12 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
 	const result = await AuthService.loginUser(validatedPayload);
 	const { accessToken, refreshToken } = result;
 
-	res.cookie("accessToken", accessToken, {
-		httpOnly: true,
-		secure: envConfig.node_env === "production",
-		sameSite: "lax",
-		maxAge: 1000 * 60 * 60 * 24, // 24 hour
-	});
-	res.cookie("refreshToken", refreshToken, {
-		httpOnly: true,
-		secure: envConfig.node_env === "production",
-		sameSite: "lax",
-		maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-	});
+	res.cookie("accessToken", accessToken, authCookieOptions(ACCESS_COOKIE_AGE));
+	res.cookie(
+		"refreshToken",
+		refreshToken,
+		authCookieOptions(REFRESH_COOKIE_AGE),
+	);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
@@ -115,18 +121,17 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
 	);
 	const { accessToken, refreshToken: newRefreshToken } = result;
 
-	res.cookie("accessToken", accessToken, {
-		httpOnly: true,
-		secure: envConfig.node_env === "production",
-		sameSite: "lax",
-		maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
-	});
-	res.cookie("refreshToken", newRefreshToken, {
-		httpOnly: true,
-		secure: envConfig.node_env === "production",
-		sameSite: "lax",
-		maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-	});
+	res.cookie(
+		"accessToken",
+		accessToken,
+		authCookieOptions(ACCESS_COOKIE_AGE)
+	);
+
+	res.cookie(
+		"refreshToken",
+		newRefreshToken,
+		authCookieOptions(REFRESH_COOKIE_AGE),
+	);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
@@ -142,8 +147,8 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
 const logout = catchAsync(async (req, res) => {
 	const refreshToken = req.cookies.refreshToken;
 
-	res.clearCookie("accessToken");
-	res.clearCookie("refreshToken");
+	res.clearCookie("accessToken", authCookieOptions(ACCESS_COOKIE_AGE));
+	res.clearCookie("refreshToken", authCookieOptions(REFRESH_COOKIE_AGE));
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
