@@ -6,6 +6,7 @@ import {
 	JobStatus,
 	PaymentStatus,
 	ProposalStatus,
+	UserRoles,
 } from "../../../generated/prisma/enums";
 import envConfig from "../../envConfig";
 import { prisma } from "../../lib/prisma";
@@ -322,17 +323,31 @@ const getPayment = async (paymentId: string, userId: string) => {
 	return payment;
 };
 
-const verifySession = async (sessionId: string) => {
-	const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-	if (session.payment_status === "paid") {
-		await prisma.payment.update({
-			where: { stripeSessionId: sessionId, status: PaymentStatus.PENDING },
-			data: { status: PaymentStatus.SUCCEEDED },
-		});
+const verifySession = async (
+	sessionId: string,
+	userId: string,
+	role: UserRoles,
+) => {
+	try {
+		await stripe.checkout.sessions.retrieve(sessionId);
+	} catch {
+		throw new AppError(httpStatus.NOT_FOUND, "Checkout session not found.");
 	}
 
-	return prisma.payment.findUnique({ where: { stripeSessionId: sessionId } });
+	const payment = await prisma.payment.findUnique({
+		where: { stripeSessionId: sessionId },
+	});
+	if (!payment) {
+		throw new AppError(httpStatus.NOT_FOUND, "Payment record not found.");
+	}
+	if (role !== UserRoles.ADMIN && payment.clientId !== userId) {
+		throw new AppError(
+			httpStatus.FORBIDDEN,
+			"You do not have permission to view this payment.",
+		);
+	}
+
+	return payment;
 };
 
 export const PaymentService = {

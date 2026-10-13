@@ -13,7 +13,7 @@ router.post(
 
 router.get(
 	"/verify/:sessionId",
-	auth(UserRoles.ADMIN),
+	auth(UserRoles.ADMIN, UserRoles.CLIENT),
 	PaymentController.verifySession,
 );
 router.get(

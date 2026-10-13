@@ -59,7 +59,12 @@ const getPayment = catchAsync(async (req: Request, res: Response) => {
 
 const verifySession = catchAsync(async (req: Request, res: Response) => {
 	const sessionId = req.params.sessionId;
-	const payment = await PaymentService.verifySession(sessionId as string);
+	const user = req.user as IRequestUser;
+	const payment = await PaymentService.verifySession(
+		sessionId as string,
+		user.userId,
+		user.role,
+	);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
